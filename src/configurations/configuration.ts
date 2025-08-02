@@ -4,6 +4,9 @@ export const CONFIG = {
   
   export const API = {
     CREATE_USER: "/users",
+    GET_USERS: "/users",
+    DELETE_USER: "/users/{userId}",
+    UPDATE_USER: "/users/{userId}",
     // LOGIN: "/identity/auth/token",
     // MY_INFO: "/profile/users/my-profile",
     // MY_POST: "/post/my-posts",
