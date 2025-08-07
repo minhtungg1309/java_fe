@@ -6,8 +6,10 @@ import {
   ChevronDownIcon,
   HorizontaLDots,
   UserCircleIcon,
+  PlugInIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+
 
 type NavItem = {
   name: string;
@@ -23,6 +25,14 @@ const navItems: NavItem[] = [
     name: "User Profile",
     path: "/",
     
+  },
+  {
+    icon: <PlugInIcon />,
+    name: "Authorization",
+    subItems: [
+      { name: "Role", path: "/role", pro: false },
+      { name: "Permission", path: "/permission", pro: false },
+    ],
   },
 ];
 

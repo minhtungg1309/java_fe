@@ -1,22 +1,32 @@
+/**
+ * Cấu hình chung cho ứng dụng
+ */
 export const CONFIG = {
-    API: "http://localhost:8080/api",
-  };
+  API: "http://localhost:8080/api",
+} as const;
+
+/**
+ * Các endpoint API
+ */
+export const API = {
+  // User APIs
+  CREATE_USER: "/users",
+  GET_USERS: "/users",
+  UPDATE_USER: "/users/{userId}",
+  DELETE_USER: "/users/{userId}",
+  MY_INFO: "/my-info",
   
-  export const API = {
-    CREATE_USER: "/users",
-    GET_USERS: "/users",
-    DELETE_USER: "/users/{userId}",
-    UPDATE_USER: "/users/{userId}",
-    // LOGIN: "/identity/auth/token",
-    // MY_INFO: "/profile/users/my-profile",
-    // MY_POST: "/post/my-posts",
-    // CREATE_POST: "/post/create",
-    // UPDATE_PROFILE: "/profile/users/my-profile",
-    // UPDATE_AVATAR: "/profile/users/avatar",
-    // SEARCH_USER: "/profile/users/search",
-    // MY_CONVERSATIONS: "/chat/conversations/my-conversations",
-    // CREATE_CONVERSATION: "/chat/conversations/create",
-    // CREATE_MESSAGE: "/chat/messages/create",
-    // GET_CONVERSATION_MESSAGES: "/chat/messages",
-  };
+  // Auth APIs
+  LOGIN: "/auth/token",
+  
+  // Permission APIs
+  CREATE_PERMISSION: "/permissions",
+  GET_PERMISSIONS: "/permissions",
+  DELETE_PERMISSION: "/permissions/{permission}",
+  
+  // Role APIs
+  CREATE_ROLE: "/roles",
+  GET_ROLES: "/roles",
+  DELETE_ROLE: "/roles/{roleName}",
+} as const;
   
