@@ -30,12 +30,15 @@ npm install
 npm run dev
 ```
 
-## Build production
-
-```bash
-npm run build
-```
-
 ## Đóng góp
 
 Chào mừng mọi đóng góp! Vui lòng tạo pull request hoặc issues để thảo luận thêm.
+## Demo 
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/60cbf4df-16a0-4d7e-a1dd-355ca9b86f62" /> 
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/06971a19-da73-4b96-839c-47e61314eb4b" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/42f27cf7-b71e-464b-b9f6-561ca8e6e835" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/48570832-4487-422c-84e4-af176005acc2" />
+
+
+
+
