@@ -5,6 +5,7 @@ import SignIn from "../pages/AuthPages/SignIn";
 import Home from "../pages/Dashboard/Home.tsx";
 import Permission from "../pages/Dashboard/Permission.tsx";
 import Role from "../pages/Dashboard/Role.tsx";
+import Chat from "../pages/Dashboard/Chat.tsx";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 
 export default function AppRoutes(): React.ReactElement {
@@ -19,6 +20,7 @@ export default function AppRoutes(): React.ReactElement {
         <Route index path="/" element={<Home />} />
         <Route path="/permission" element={<Permission />} />
         <Route path="/role" element={<Role />} />
+        <Route path="/chat" element={<Chat />} />
       </Route>
 
       {/* Public Auth Routes */}
