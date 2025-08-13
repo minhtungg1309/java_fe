@@ -75,6 +75,15 @@ export class UserService {
       throw handleApiError(error, 'Không thể lấy thông tin user');
     }
   }
+
+  static async search(keyword: string): Promise<User[]> {
+    try {
+      const response = await httpClient.post(API.SEARCH_USER, { keyword });
+      return handleApiResponse<User[]>(response); // backend trả về { result: [...] } -> OK
+    } catch (error) {
+      throw handleApiError(error, 'Không thể tìm kiếm user');
+    }
+  }
 }
 
 // Export các function để tương thích ngược
@@ -83,3 +92,4 @@ export const getUsers = UserService.getAll;
 export const updateUser = UserService.update;
 export const deleteUser = UserService.delete;
 export const getMyInfo = UserService.getMyInfo;
+export const searchUsers = UserService.search; // thêm export

@@ -9,16 +9,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
   const formatTime = (timeString: string) => {
     const date = new Date(timeString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInMs = now.getTime() - date.getTime();
     
-    if (diffInHours < 24) {
-      return `${diffInHours} giờ trước`;
+    if (diffInMs < 60000) { // < 1 phút
+      return 'Vừa xong';
+    } else if (diffInMs < 3600000) { // < 1 giờ
+      const minutes = Math.floor(diffInMs / 60000);
+      return `${minutes} phút trước`;
+    } else if (diffInMs < 86400000) { // < 1 ngày
+      const hours = Math.floor(diffInMs / 3600000);
+      return `${hours} giờ trước`;
     } else {
-      const days = Math.floor(diffInHours / 24);
-      return `${days} ngày trước`;
+      // Hiển thị ngày/tháng cho tin nhắn cũ
+      return date.toLocaleDateString('vi-VN', { 
+        day: '2-digit', 
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   };
-
   return (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}>
       <div className={`max-w-[280px] sm:max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
