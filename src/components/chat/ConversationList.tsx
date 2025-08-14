@@ -10,6 +10,10 @@ interface ConversationListProps {
   onSearchChange: (searchTerm: string) => void;
 }
 
+/**
+ * Component hiển thị danh sách cuộc trò chuyện
+ * Bao gồm chức năng tìm kiếm và hiển thị danh sách
+ */
 export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   activeConversationId,
@@ -20,34 +24,46 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Conversation[]>([]);
 
-  const formatTime = (timeString?: string) => {
+  /**
+   * Format thời gian tin nhắn cuối thành dạng dễ đọc
+   */
+  const formatTime = (timeString?: string): string => {
     if (!timeString) return '';
+    
     const date = new Date(timeString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
     if (diffInMinutes < 60) return `${diffInMinutes} phút`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} giờ`;
     return `${Math.floor(diffInMinutes / 1440)} ngày`;
   };
 
-  const mapUserToConversation = (u: User): Conversation => {
-    const fullName = `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim();
+  /**
+   * Chuyển đổi User thành Conversation để hiển thị trong kết quả tìm kiếm
+   */
+  const mapUserToConversation = (user: User): Conversation => {
+    const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
     return {
-      id: u.id,                 // tạm dùng id = userId
-      participantId: u.id,
-      participantName: fullName || u.username,
-      participantRole: u.roles?.[0]?.name,
+      id: user.id, // Tạm dùng id = userId
+      participantId: user.id,
+      participantName: fullName || user.username,
+      participantRole: user.roles?.[0]?.name,
       unreadCount: 0,
       isActive: false,
     };
   };
 
+  /**
+   * Tìm kiếm người dùng khi thay đổi từ khóa tìm kiếm
+   */
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSearchResults([]);
       return;
     }
-    const t = setTimeout(async () => {
+
+    const timeoutId = setTimeout(async () => {
       try {
         setSearching(true);
         const users = await searchUsersApi(searchTerm.trim());
@@ -58,9 +74,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         setSearching(false);
       }
     }, 300);
-    return () => clearTimeout(t);
+
+    return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  // Danh sách để hiển thị: kết quả tìm kiếm hoặc danh sách cuộc trò chuyện
   const listToRender = useMemo(
     () => (searchTerm.trim() ? searchResults : conversations),
     [searchTerm, searchResults, conversations]
@@ -68,6 +86,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full">
+      {/* Header với tiêu đề và nút menu */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Trò chuyện</h2>
@@ -78,6 +97,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </button>
         </div>
 
+        {/* Ô tìm kiếm */}
         <div className="relative">
           <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -92,10 +112,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               onSearchChange(value);
             }}
           />
-          {searching && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">Đang tìm...</span>}
+          {searching && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+              Đang tìm...
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Danh sách cuộc trò chuyện */}
       <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[calc(100vh-200px)]">
         <div className="min-h-full">
           {listToRender.map((conversation) => (
@@ -108,12 +133,19 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             >
               <div className="flex items-center space-x-3">
                 <div className="flex-1 min-w-0">
+                  {/* Tên người tham gia và thời gian */}
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">{conversation.participantName}</h3>
+                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                      {conversation.participantName}
+                    </h3>
                     {conversation.lastMessageTime && (
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{formatTime(conversation.lastMessageTime)}</span>
+                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                        {formatTime(conversation.lastMessageTime)}
+                      </span>
                     )}
                   </div>
+                  
+                  {/* Vai trò/tin nhắn cuối và số tin nhắn chưa đọc */}
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-sm text-gray-500 truncate flex-1">
                       {conversation.participantRole || conversation.lastMessage || 'Chưa có tin nhắn'}
@@ -128,7 +160,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               </div>
             </div>
           ))}
-          {listToRender.length === 0 && <div className="p-4 text-sm text-gray-500">Không có cuộc trò chuyện</div>}
+          
+          {/* Thông báo khi không có cuộc trò chuyện */}
+          {listToRender.length === 0 && (
+            <div className="p-4 text-sm text-gray-500">Không có cuộc trò chuyện</div>
+          )}
         </div>
       </div>
     </div>

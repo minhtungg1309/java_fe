@@ -3,6 +3,9 @@ import { API } from "../configurations/configuration";
 import { Conversation } from "../types/chat";
 import { handleApiResponse, handleApiError } from "../utils/apiHelpers";
 
+/**
+ * Thông tin người tham gia từ API
+ */
 type ParticipantInfo = {
   userId: string;
   username: string;
@@ -10,17 +13,23 @@ type ParticipantInfo = {
   lastName?: string | null;
 };
 
+/**
+ * Response từ API khi lấy danh sách cuộc trò chuyện
+ */
 type ConversationResponse = {
   id: string;
   type: string; // "DIRECT" | "GROUP"
   participantsHash: string;
   conversationAvatar?: string | null;
-  conversationName: string; // BE đã set tên còn lại (đối phương) cho current user
+  conversationName: string; // Backend đã set tên đối phương cho current user
   participants: ParticipantInfo[];
   createdDate: string;
   modifiedDate: string;
 };
 
+/**
+ * Response từ API khi lấy tin nhắn
+ */
 type ChatMessageResponse = {
   id: string;
   conversationId: string;
@@ -30,69 +39,103 @@ type ChatMessageResponse = {
   createdDate: string;
 };
 
-const toConversation = (r: ConversationResponse): Conversation => {
-  const target =
-    r.participants.find(p => p.username === r.conversationName) ?? r.participants[0];
+/**
+ * Chuyển đổi ConversationResponse thành Conversation
+ */
+const toConversation = (response: ConversationResponse): Conversation => {
+  const target = response.participants.find(p => p.username === response.conversationName) 
+    ?? response.participants[0];
 
   return {
-    id: r.id,
-    participantId: target?.userId ?? r.id,
-    participantName: r.conversationName,
-    participantAvatar: r.conversationAvatar || undefined,
+    id: response.id,
+    participantId: target?.userId ?? response.id,
+    participantName: response.conversationName,
+    participantAvatar: response.conversationAvatar || undefined,
     lastMessage: undefined,
-    lastMessageTime: r.modifiedDate,
+    lastMessageTime: response.modifiedDate,
     participantRole: undefined,
     unreadCount: 0,
     isActive: false,
   };
 };
 
-const toChatMessage = (r: ChatMessageResponse) => ({
-  id: r.id,
-  content: r.message,
-  senderId: r.me ? 'current' : r.sender.userId,
-  senderName: r.sender.username,
+/**
+ * Chuyển đổi ChatMessageResponse thành ChatMessage
+ */
+const toChatMessage = (response: ChatMessageResponse) => ({
+  id: response.id,
+  content: response.message,
+  senderId: response.me ? 'current' : response.sender.userId,
+  senderName: response.sender.username,
   senderAvatar: undefined, // Thêm nếu backend có avatar
-  timestamp: r.createdDate,
+  timestamp: response.createdDate,
   type: 'text' as const,
   isRead: true,
 });
 
-export const getMyConversations = async () => {
+/**
+ * Lấy danh sách cuộc trò chuyện của người dùng hiện tại
+ */
+export const getMyConversations = async (): Promise<Conversation[]> => {
   try {
-    const res = await httpClient.get(API.CONVERSATIONS_MY);
-    const data = handleApiResponse<ConversationResponse[]>(res);
+    const response = await httpClient.get(API.CONVERSATIONS_MY);
+    const data = handleApiResponse<ConversationResponse[]>(response);
     return data.map(toConversation);
   } catch (err) {
     throw handleApiError(err, "Không thể tải danh sách cuộc trò chuyện");
   }
 };
 
-export const createConversation = async (participantId: string, type: "DIRECT" | "GROUP" = "DIRECT") => {
+/**
+ * Tạo cuộc trò chuyện mới với người dùng
+ * @param participantId - ID của người tham gia
+ * @param type - Loại cuộc trò chuyện (DIRECT hoặc GROUP)
+ */
+export const createConversation = async (
+  participantId: string, 
+  type: "DIRECT" | "GROUP" = "DIRECT"
+): Promise<Conversation> => {
   try {
-    const res = await httpClient.post(API.CONVERSATIONS_CREATE, { type, participantIds: [participantId] });
-    const data = handleApiResponse<ConversationResponse>(res);
+    const response = await httpClient.post(API.CONVERSATIONS_CREATE, { 
+      type, 
+      participantIds: [participantId] 
+    });
+    const data = handleApiResponse<ConversationResponse>(response);
     return toConversation(data);
   } catch (err) {
     throw handleApiError(err, "Không thể tạo cuộc trò chuyện");
   }
 };
 
+/**
+ * Lấy danh sách tin nhắn của một cuộc trò chuyện
+ * @param conversationId - ID của cuộc trò chuyện
+ */
 export const getMessages = async (conversationId: string) => {
   try {
-    const res = await httpClient.get(API.MESSAGES_GET, { params: { conversationId } });
-    const data = handleApiResponse<ChatMessageResponse[]>(res);
-    // BE trả desc; đảo lại asc để hiển thị
+    const response = await httpClient.get(API.MESSAGES_GET, { 
+      params: { conversationId } 
+    });
+    const data = handleApiResponse<ChatMessageResponse[]>(response);
+    // Backend trả về theo thứ tự giảm dần, đảo lại để hiển thị tăng dần
     return data.map(toChatMessage).reverse();
   } catch (err) {
     throw handleApiError(err, "Không thể tải tin nhắn");
   }
 };
 
+/**
+ * Gửi tin nhắn trong cuộc trò chuyện
+ * @param conversationId - ID của cuộc trò chuyện
+ * @param message - Nội dung tin nhắn
+ */
 export const sendMessage = async (conversationId: string, message: string) => {
   try {
-    const res = await httpClient.post(API.MESSAGES_CREATE, { conversationId, message });
-    const data = handleApiResponse<ChatMessageResponse>(res);
+    const response = await httpClient.post(API.MESSAGES_CREATE, { 
+      conversationId, 
+      message 
+    });
+    const data = handleApiResponse<ChatMessageResponse>(response);
     return toChatMessage(data);
   } catch (err) {
     throw handleApiError(err, "Không thể gửi tin nhắn");

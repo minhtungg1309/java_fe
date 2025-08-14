@@ -7,10 +7,10 @@ export const CONFIG = {
 } as const;
 
 /**
- * Các endpoint API
+ * Các endpoint API được sử dụng trong ứng dụng
  */
 export const API = {
-  // User APIs
+  // Quản lý người dùng
   CREATE_USER: "/users",
   GET_USERS: "/users",
   UPDATE_USER: "/users/{userId}",
@@ -18,24 +18,24 @@ export const API = {
   MY_INFO: "/my-info",
   SEARCH_USER: "/users/search",
   
-  // Auth APIs
+  // Xác thực
   LOGIN: "/auth/token",
   
-  // Permission APIs
+  // Quản lý quyền
   CREATE_PERMISSION: "/permissions",
   GET_PERMISSIONS: "/permissions",
   DELETE_PERMISSION: "/permissions/{permission}",
   
-  // Role APIs
+  // Quản lý vai trò
   CREATE_ROLE: "/roles",
   GET_ROLES: "/roles",
   DELETE_ROLE: "/roles/{roleName}",
 
-  // Conversation APIs
+  // Quản lý cuộc trò chuyện
   CONVERSATIONS_MY: "/conversations/my-conversations",
   CONVERSATIONS_CREATE: "/conversations/create",
 
-  // Message APIs
+  // Quản lý tin nhắn
   MESSAGES_GET: "/messages",
   MESSAGES_CREATE: "/messages/create",
 } as const;

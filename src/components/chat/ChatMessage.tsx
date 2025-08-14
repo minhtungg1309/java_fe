@@ -5,33 +5,51 @@ interface ChatMessageProps {
   isOwnMessage: boolean;
 }
 
+/**
+ * Component hiển thị một tin nhắn chat
+ * Hỗ trợ hiển thị tin nhắn văn bản và hình ảnh
+ */
 export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage }) => {
-  const formatTime = (timeString: string) => {
+  /**
+   * Format thời gian tin nhắn thành dạng dễ đọc
+   * @param timeString - Chuỗi thời gian ISO
+   * @returns Chuỗi thời gian đã format
+   */
+  const formatTime = (timeString: string): string => {
     const date = new Date(timeString);
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     
-    if (diffInMs < 60000) { // < 1 phút
+    // Tin nhắn vừa gửi (< 1 phút)
+    if (diffInMs < 60000) {
       return 'Vừa xong';
-    } else if (diffInMs < 3600000) { // < 1 giờ
+    }
+    
+    // Tin nhắn trong vòng 1 giờ
+    if (diffInMs < 3600000) {
       const minutes = Math.floor(diffInMs / 60000);
       return `${minutes} phút trước`;
-    } else if (diffInMs < 86400000) { // < 1 ngày
+    }
+    
+    // Tin nhắn trong vòng 1 ngày
+    if (diffInMs < 86400000) {
       const hours = Math.floor(diffInMs / 3600000);
       return `${hours} giờ trước`;
-    } else {
-      // Hiển thị ngày/tháng cho tin nhắn cũ
-      return date.toLocaleDateString('vi-VN', { 
-        day: '2-digit', 
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
     }
+    
+    // Tin nhắn cũ hơn - hiển thị ngày/tháng
+    return date.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
+
   return (
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}>
       <div className={`max-w-[280px] sm:max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+        {/* Hiển thị avatar và tên người gửi (chỉ cho tin nhắn của người khác) */}
         {!isOwnMessage && (
           <div className="flex items-center space-x-2 mb-1">
             <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
@@ -51,6 +69,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
           </div>
         )}
         
+        {/* Nội dung tin nhắn */}
         <div
           className={`rounded-lg px-3 py-2 sm:px-4 sm:py-2 shadow-sm ${
             isOwnMessage
@@ -58,6 +77,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
               : 'bg-gray-100 text-gray-900'
           }`}
         >
+          {/* Hiển thị tin nhắn hình ảnh */}
           {message.type === 'image' && message.imageUrl ? (
             <div>
               <img
@@ -68,10 +88,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
               <p className="text-xs mt-1 opacity-75">Vui lòng xem trước hình ảnh</p>
             </div>
           ) : (
+            /* Hiển thị tin nhắn văn bản */
             <p className="text-sm leading-relaxed">{message.content}</p>
           )}
         </div>
         
+        {/* Thời gian tin nhắn */}
         <div className={`text-xs text-gray-500 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
           {formatTime(message.timestamp)}
         </div>
