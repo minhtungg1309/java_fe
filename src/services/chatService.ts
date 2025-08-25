@@ -11,6 +11,7 @@ type ParticipantInfo = {
   username: string;
   firstName?: string | null;
   lastName?: string | null;
+  avatar?: string | null;
 };
 
 /**
@@ -21,8 +22,11 @@ type ConversationResponse = {
   type: string; // "DIRECT" | "GROUP"
   participantsHash: string;
   conversationAvatar?: string | null;
-  conversationName: string; // Backend đã set tên đối phương cho current user
+  conversationName: string;
   participants: ParticipantInfo[];
+  lastMessage?: string; // ← Thêm tin nhắn cuối
+  lastMessageSender?: string; // ← Thêm tên người gửi
+  unreadCount?: number; // ← Thêm số tin nhắn chưa đọc
   createdDate: string;
   modifiedDate: string;
 };
@@ -50,11 +54,12 @@ const toConversation = (response: ConversationResponse): Conversation => {
     id: response.id,
     participantId: target?.userId ?? response.id,
     participantName: response.conversationName,
-    participantAvatar: response.conversationAvatar || undefined,
-    lastMessage: undefined,
+    participantAvatar: target?.avatar || response.conversationAvatar || undefined,
+    lastMessage: response.lastMessage || undefined, // ← Lấy tin nhắn cuối từ API
+    lastMessageSender: response.lastMessageSender || undefined, // ← Lấy tên người gửi
     lastMessageTime: response.modifiedDate,
     participantRole: undefined,
-    unreadCount: 0,
+    unreadCount: response.unreadCount || 0, // ← Lấy số tin nhắn chưa đọc từ API
     isActive: false,
   };
 };
@@ -67,7 +72,7 @@ const toChatMessage = (response: ChatMessageResponse) => ({
   content: response.message,
   senderId: response.me ? 'current' : response.sender.userId,
   senderName: response.sender.username,
-  senderAvatar: undefined, // Thêm nếu backend có avatar
+  senderAvatar: response.sender.avatar, // Thêm nếu backend có avatar
   timestamp: response.createdDate,
   type: 'text' as const,
   isRead: true,

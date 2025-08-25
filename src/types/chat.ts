@@ -23,6 +23,7 @@ export interface Conversation {
   participantAvatar?: string;
   participantRole?: string;
   lastMessage?: string;
+  lastMessageSender?: string; // ← Thêm tên người gửi tin nhắn cuối
   lastMessageTime?: string;
   unreadCount: number;
   isActive?: boolean;

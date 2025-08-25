@@ -13,6 +13,10 @@ export const useUserForm = () => {
     lastName: '',
     dob: '',
     roles: [],
+    avatar: '',
+    city: '',
+    email: '',
+    phone: '',
   });
 
   const resetForm = useCallback(() => {
@@ -23,6 +27,10 @@ export const useUserForm = () => {
       lastName: '',
       dob: '',
       roles: [],
+      avatar: '',
+      city: '',
+      email: '',
+      phone: '',
     });
   }, []);
 
@@ -42,6 +50,10 @@ export const useUserForm = () => {
       lastName: user.lastName || '',
       dob: user.dob || '',
       roles: user.roles?.map((role: { name: string }) => role.name) || [],
+      avatar: user.avatar || '',
+      city: user.city || '',
+      email: user.email || '',
+      phone: user.phone || '',
     });
   }, []);
 

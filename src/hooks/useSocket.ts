@@ -17,6 +17,7 @@ export interface IncomingMessage {
     username: string;
     firstName?: string;
     lastName?: string;
+    avatar?: string;
   };
   createdDate?: string;
   [key: string]: unknown;

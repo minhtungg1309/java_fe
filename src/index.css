@@ -816,3 +816,42 @@ span.flatpickr-weekday,
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+/* Mobile responsive cho chat */
+@media (max-width: 768px) {
+  .chat-container {
+    flex-direction: column;
+  }
+  
+  /* Đảm bảo conversation list hiển thị đầy đủ trên mobile */
+  .conversation-list-mobile {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+  
+  /* Ẩn chat area khi đang hiển thị conversation list */
+  .chat-area-mobile {
+    display: none;
+  }
+  
+  /* Hiển thị chat area khi đã chọn conversation */
+  .chat-area-mobile.active {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 769px) {
+  .conversation-list-desktop {
+    width: 25% !important;
+    display: block !important;
+  }
+  
+  .chat-area-desktop {
+    width: 75% !important;
+    display: block !important;
+  }
+}

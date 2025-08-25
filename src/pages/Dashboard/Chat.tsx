@@ -101,12 +101,12 @@ export default function Chat() {
     if (!activeConversation) return;
     if (payload?.conversationId !== activeConversation.id) return;
 
-    // Tạo tin nhắn mới từ payload
     const newMsg: ChatMessageType = {
       id: payload.id,
       content: payload.message ?? payload.content ?? '',
       senderId: payload.me ? 'current' : (payload.sender?.userId ?? ''),
       senderName: payload.sender?.username ?? '',
+      senderAvatar: payload.sender?.avatar, // Đảm bảo avatar được truyền
       timestamp: payload.createdDate ?? new Date().toISOString(),
       type: 'text',
       isRead: true,
@@ -130,52 +130,59 @@ export default function Chat() {
   return (
     <>
       <PageMeta title="Trò chuyện" description="Trang trò chuyện" />
-      
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-80px)]">
-        {/* Danh sách cuộc trò chuyện */}
-        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col lg:col-span-1 ${
-          showConversationList ? 'block' : 'hidden lg:block'
-        }`}>
-          <ConversationList
-            conversations={conversations}
-            activeConversationId={activeConversation?.id}
-            onConversationSelect={handleConversationSelect}
-            onSearchChange={setSearchTerm}
-          />
-        </div>
-
-        {/* Khu vực chat chính */}
-        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col lg:col-span-3 ${
-          !showConversationList || activeConversation ? 'block' : 'hidden lg:block'
-        }`}>
-          {/* Header cuộc trò chuyện (chỉ hiển thị trên desktop) */}
-          <div className="hidden lg:block">
-            <ChatHeader conversation={activeConversation} />
-          </div>
-
-          {/* Khu vực hiển thị tin nhắn */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50 scrollbar-thin max-h-[calc(100vh-300px)]">
-            {activeConversation ? (
-              <div className="space-y-2 min-h-full">
-                {messages.map((message) => (
-                  <ChatMessage 
-                    key={message.id} 
-                    message={message} 
-                    isOwnMessage={message.senderId === 'current'} 
-                  />
-                ))}
+      <div className="space-y-6">
+        <div className="mx-auto w-full max-w-[1500px]"> 
+          {/* Khung chiếm gần full màn hình nhưng không làm cuộn toàn trang */}
+          <div
+            className="flex gap-4 min-w-0"
+            style={{ height: 'calc(100dvh - 150px)' }}
+          >
+            {/* Danh sách cuộc trò chuyện */}
+            <div
+              className={`min-h-0 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden
+              w-full lg:w-[380px] ${showConversationList ? 'flex' : 'hidden'} lg:flex`}
+            >
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <ConversationList
+                  conversations={conversations}
+                  activeConversationId={activeConversation?.id}
+                  onConversationSelect={handleConversationSelect}
+                  onSearchChange={setSearchTerm}
+                />
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-gray-500">
-                  Chọn một cuộc trò chuyện để bắt đầu
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
 
-          {/* Ô nhập tin nhắn (chỉ hiển thị khi có cuộc trò chuyện active) */}
-          {activeConversation && <MessageInput onSendMessage={handleSendMessage} />}
+            {/* Khu vực chat */}
+            <div
+              className={`min-h-0 flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden
+              ${showConversationList ? 'hidden' : 'flex'} lg:flex`}
+            >
+              <div className="shrink-0">
+                <ChatHeader
+                  conversation={activeConversation}
+                  onBackToConversations={() => setShowConversationList(true)}
+                />
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 bg-gray-50">
+                {activeConversation ? (
+                  <div className="space-y-2">
+                    {messages.map((m) => (
+                      <ChatMessage
+                        key={m.id}
+                        message={m}
+                        isOwnMessage={m.senderId === 'current'}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Chọn một cuộc trò chuyện để bắt đầu
+                  </div>
+                )}
+              </div>
+              {activeConversation && <MessageInput onSendMessage={handleSendMessage} />}
+            </div>
+          </div>
         </div>
       </div>
     </>

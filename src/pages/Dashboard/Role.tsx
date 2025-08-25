@@ -6,7 +6,7 @@ import { useRoleForm } from '../../hooks/useRoleForm';
 import { usePermissionList } from '../../hooks/usePermissionList';
 import { useModal } from '../../hooks/useModal';
 import { CreateRoleRequest } from '../../types/role';
-
+import ComponentCard from "../../components/common/ComponentCard";
 /**
  * Component quản lý vai trò
  */
@@ -50,7 +50,7 @@ export default function Role() {
   }, [closeAddModal, resetForm]);
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold mb-6">Quản Lý Vai Trò</h1>
       
       {/* Header với nút thêm mới */}
@@ -65,11 +65,13 @@ export default function Role() {
         </button>
       </div>
 
-      {/* Bảng danh sách vai trò */}
+      <ComponentCard title="Role">
+           {/* Bảng danh sách vai trò */}
       <RoleTable 
         roles={roles}
         onDelete={handleDelete}
       />
+        </ComponentCard>
 
       {/* Modal thêm mới vai trò */}
       {showAddModal && (

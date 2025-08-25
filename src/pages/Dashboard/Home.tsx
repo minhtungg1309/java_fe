@@ -6,6 +6,7 @@ import { useUserManagement } from '../../hooks/useUserManagement';
 import { useUserForm } from '../../hooks/useUserForm';
 import { useRoleList } from '../../hooks/useRoleList';
 import { useModal } from '../../hooks/useModal';
+import ComponentCard from "../../components/common/ComponentCard";
 import { User, CreateUserRequest, UpdateUserRequest } from '../../types/user';
 
 /**
@@ -58,6 +59,10 @@ export default function Home() {
         lastName: form.lastName,
         dob: form.dob,
         roles: form.roles,
+        avatar: form.avatar,
+        city: form.city,
+        email: form.email,
+        phone: form.phone,
       };
       
       if (form.password && form.password.trim() !== '') {
@@ -94,7 +99,7 @@ export default function Home() {
   }, [showAddModal, showUpdateModal, closeAddModal, closeUpdateModal, resetForm]);
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold mb-6">Quản Lý Người Dùng</h1>
       
       {/* Header với nút thêm mới */}
@@ -109,12 +114,15 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Bảng danh sách người dùng */}
+     
+       <ComponentCard title="User">
+           {/* Bảng danh sách người dùng */}
       <UserTable 
         users={users}
-        onEdit={handleEdit}
+        onEdit={handleEdit} 
         onDelete={handleDelete}
       />
+        </ComponentCard>
 
       {/* Modal thêm mới người dùng */}
       {showAddModal && (

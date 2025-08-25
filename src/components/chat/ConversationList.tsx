@@ -132,6 +132,24 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               onClick={() => onConversationSelect(conversation)}
             >
               <div className="flex items-center space-x-3">
+                {/* Avatar người tham gia với status indicator */}
+                <div className="relative w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {conversation.participantAvatar ? (
+                    <img
+                      src={conversation.participantAvatar}
+                      alt={conversation.participantName}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg text-gray-600 font-semibold">
+                      {conversation.participantName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  
+                  {/* Status indicator dot */}
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                </div>
+                
                 <div className="flex-1 min-w-0">
                   {/* Tên người tham gia và thời gian */}
                   <div className="flex items-center justify-between">
@@ -148,7 +166,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   {/* Vai trò/tin nhắn cuối và số tin nhắn chưa đọc */}
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-sm text-gray-500 truncate flex-1">
-                      {conversation.participantRole || conversation.lastMessage || 'Chưa có tin nhắn'}
+                      {conversation.lastMessage ? (
+                        <span>
+                          <span className="font-medium">{conversation.lastMessageSender}: </span>
+                          {conversation.lastMessage}
+                        </span>
+                      ) : (
+                        'Chưa có tin nhắn'
+                      )}
                     </p>
                     {conversation.unreadCount > 0 && (
                       <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center flex-shrink-0 ml-2">

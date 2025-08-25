@@ -5,6 +5,7 @@ import { usePermissionManagement } from '../../hooks/usePermissionManagement';
 import { usePermissionForm } from '../../hooks/usePermissionForm';
 import { useModal } from '../../hooks/useModal';
 import { CreatePermissionRequest } from '../../types/permission';
+import ComponentCard from "../../components/common/ComponentCard";
 
 /**
  * Component quản lý quyền
@@ -44,7 +45,8 @@ export default function Permission() {
   }, [closeAddModal, resetForm]);
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
+    
       <h1 className="text-3xl font-bold mb-6">Quản Lý Quyền</h1>
       
       {/* Header với nút thêm mới */}
@@ -59,11 +61,14 @@ export default function Permission() {
         </button>
       </div>
 
-      {/* Bảng danh sách quyền */}
+
+  <ComponentCard title="Permission">
+          {/* Bảng danh sách quyền */}
       <PermissionTable 
         permissions={permissions}
         onDelete={handleDelete}
       />
+        </ComponentCard>
 
       {/* Modal thêm mới quyền */}
       {showAddModal && (

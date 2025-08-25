@@ -2,13 +2,14 @@ import { Conversation } from '../../types/chat';
 
 interface ChatHeaderProps {
   conversation?: Conversation | null;
+  onBackToConversations?: () => void; // Thêm prop này
 }
 
 /**
  * Component hiển thị header của cuộc trò chuyện
  * Bao gồm thông tin người tham gia và các nút hành động
  */
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation, onBackToConversations }) => {
   // Hiển thị placeholder khi chưa chọn cuộc trò chuyện
   if (!conversation) {
     return (
@@ -22,16 +23,29 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation }) => {
     <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
       {/* Phần thông tin người tham gia */}
       <div className="flex items-center space-x-3">
+        {/* Nút back cho mobile */}
+        {onBackToConversations && (
+          <button
+            className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+            onClick={onBackToConversations}
+            aria-label="Quay lại"
+          >
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+
         {/* Avatar người tham gia */}
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+        <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
           {conversation.participantAvatar ? (
             <img
               src={conversation.participantAvatar}
               alt={conversation.participantName}
-              className="w-10 h-10 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <span className="text-gray-600 font-semibold">
+            <span className="text-xl text-gray-600 font-semibold">
               {conversation.participantName.charAt(0).toUpperCase()}
             </span>
           )}
@@ -48,8 +62,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation }) => {
         </div>
       </div>
 
-      {/* Các nút hành động */}
-      <div className="flex items-center space-x-2">
+      {/* Các nút hành động - Ẩn trên mobile */}
+      <div className="hidden md:flex items-center space-x-2">
         {/* Nút gọi điện */}
         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
           <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

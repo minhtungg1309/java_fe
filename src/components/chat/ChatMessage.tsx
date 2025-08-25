@@ -47,20 +47,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isOwnMessage 
   };
 
   return (
-    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}>
+    <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2 px-2 md:px-0`}>
       <div className={`max-w-[280px] sm:max-w-xs lg:max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
         {/* Hiển thị avatar và tên người gửi (chỉ cho tin nhắn của người khác) */}
-        {!isOwnMessage && (
+               {/* Hiển thị avatar và tên người gửi (chỉ cho tin nhắn của người khác) */}
+               {!isOwnMessage && (
           <div className="flex items-center space-x-2 mb-1">
-            <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
               {message.senderAvatar ? (
                 <img
                   src={message.senderAvatar}
                   alt={message.senderName}
-                  className="w-6 h-6 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <span className="text-xs text-gray-600 font-semibold">
+                <span className="text-sm text-gray-600 font-semibold">
                   {message.senderName.charAt(0).toUpperCase()}
                 </span>
               )}
