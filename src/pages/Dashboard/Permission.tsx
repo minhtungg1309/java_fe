@@ -1,43 +1,60 @@
-import React, { useCallback } from 'react';
-import { PermissionTable } from '../../components/permission/PermissionTable';
-import { CreatePermissionModal } from '../../components/permission/CreatePermissionModal';
-import { usePermissionManagement } from '../../hooks/usePermissionManagement';
-import { usePermissionForm } from '../../hooks/usePermissionForm';
-import { useModal } from '../../hooks/useModal';
-import { CreatePermissionRequest } from '../../types/permission';
+import React, { useCallback } from "react";
+import { PermissionTable } from "../../components/permission/PermissionTable";
+import { CreatePermissionModal } from "../../components/permission/CreatePermissionModal";
+import { usePermissionManagement } from "../../hooks/usePermissionManagement";
+import { usePermissionForm } from "../../hooks/usePermissionForm";
+import { useModal } from "../../hooks/useModal";
+import { CreatePermissionRequest } from "../../types/permission";
 import ComponentCard from "../../components/common/ComponentCard";
 
 /**
  * Component quản lý quyền
  */
 export default function Permission() {
-  const { permissions, loading, addPermission, removePermission } = usePermissionManagement();
+  const { permissions, loading, addPermission, removePermission } =
+    usePermissionManagement();
   const { form, resetForm, updateForm } = usePermissionForm();
-  const { isOpen: showAddModal, openModal: openAddModal, closeModal: closeAddModal } = useModal();
+  const {
+    isOpen: showAddModal,
+    openModal: openAddModal,
+    closeModal: closeAddModal,
+  } = useModal();
 
   // Event handlers
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    updateForm(e.target.name as keyof CreatePermissionRequest, e.target.value);
-  }, [updateForm]);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      updateForm(
+        e.target.name as keyof CreatePermissionRequest,
+        e.target.value
+      );
+    },
+    [updateForm]
+  );
 
-  const handleSubmitCreate = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await addPermission(form);
-      closeAddModal();
-      resetForm();
-    } catch {
-      // Error already handled in addPermission
-    }
-  }, [form, addPermission, closeAddModal, resetForm]);
+  const handleSubmitCreate = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        await addPermission(form);
+        closeAddModal();
+        resetForm();
+      } catch {
+        // Error already handled in addPermission
+      }
+    },
+    [form, addPermission, closeAddModal, resetForm]
+  );
 
-  const handleDelete = useCallback(async (permissionName: string) => {
-    try {
-      await removePermission(permissionName);
-    } catch {
-      // Error already handled in removePermission
-    }
-  }, [removePermission]);
+  const handleDelete = useCallback(
+    async (permissionName: string) => {
+      try {
+        await removePermission(permissionName);
+      } catch {
+        // Error already handled in removePermission
+      }
+    },
+    [removePermission]
+  );
 
   const handleCloseModal = useCallback(() => {
     closeAddModal();
@@ -46,9 +63,8 @@ export default function Permission() {
 
   return (
     <div className="space-y-6">
-    
       <h1 className="text-3xl font-bold mb-6">Quản Lý Quyền</h1>
-      
+
       {/* Header với nút thêm mới */}
       <div className="flex justify-between items-center mb-6">
         <div></div>
@@ -61,14 +77,10 @@ export default function Permission() {
         </button>
       </div>
 
-
-  <ComponentCard title="Permission">
-          {/* Bảng danh sách quyền */}
-      <PermissionTable 
-        permissions={permissions}
-        onDelete={handleDelete}
-      />
-        </ComponentCard>
+      <ComponentCard title="Permission">
+        {/* Bảng danh sách quyền */}
+        <PermissionTable permissions={permissions} onDelete={handleDelete} />
+      </ComponentCard>
 
       {/* Modal thêm mới quyền */}
       {showAddModal && (

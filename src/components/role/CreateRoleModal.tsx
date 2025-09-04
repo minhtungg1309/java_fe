@@ -1,13 +1,15 @@
-import React from 'react';
-import { CreateRoleRequest } from '../../types/role';
-import { Permission } from '../../types/permission';
+import React from "react";
+import { CreateRoleRequest } from "../../types/role";
+import { Permission } from "../../types/permission";
 
 interface CreateRoleModalProps {
   form: CreateRoleRequest;
   permissions: Permission[];
   loading?: boolean;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
   onPermissionChange: (permissionName: string, checked: boolean) => void;
   onClose: () => void;
 }
@@ -19,7 +21,7 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
   onSubmit,
   onChange,
   onPermissionChange,
-  onClose
+  onClose,
 }) => {
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
@@ -28,8 +30,18 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
         <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
           <h2 className="text-xl font-semibold">Thêm Mới Vai Trò</h2>
           <button onClick={onClose} className="text-white hover:text-gray-200">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -73,23 +85,32 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
               </label>
               <div className="border border-gray-300 rounded-lg p-4 max-h-48 overflow-y-auto">
                 {permissions.map((permission) => (
-                  <label key={permission.name} className="flex items-center gap-2 py-1">
+                  <label
+                    key={permission.name}
+                    className="flex items-center gap-2 py-1"
+                  >
                     <input
                       type="checkbox"
                       checked={form.permissions.includes(permission.name)}
-                      onChange={(e) => onPermissionChange(permission.name, e.target.checked)}
+                      onChange={(e) =>
+                        onPermissionChange(permission.name, e.target.checked)
+                      }
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-sm">
                       <span className="font-medium">{permission.name}</span>
                       {permission.description && (
-                        <span className="text-gray-500 ml-2">- {permission.description}</span>
+                        <span className="text-gray-500 ml-2">
+                          - {permission.description}
+                        </span>
                       )}
                     </span>
                   </label>
                 ))}
                 {permissions.length === 0 && (
-                  <p className="text-gray-500 text-sm">Chưa có quyền nào được tạo</p>
+                  <p className="text-gray-500 text-sm">
+                    Chưa có quyền nào được tạo
+                  </p>
                 )}
               </div>
             </div>
@@ -102,8 +123,18 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
               onClick={onClose}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
               Đóng
             </button>
@@ -112,8 +143,18 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2"
               disabled={loading}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               Thêm mới
             </button>
@@ -122,4 +163,4 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
       </div>
     </div>
   );
-}; 
+};

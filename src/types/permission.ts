@@ -13,4 +13,4 @@ export interface Permission {
 export interface CreatePermissionRequest {
   name: string;
   description: string;
-} 
+}

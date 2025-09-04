@@ -13,11 +13,13 @@ export default function AppRoutes(): React.ReactElement {
   return (
     <Routes>
       {/* Protected Dashboard Routes */}
-      <Route element={
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      }>
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index path="/" element={<Home />} />
         <Route path="/permission" element={<Permission />} />
         <Route path="/role" element={<Role />} />

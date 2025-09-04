@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Conversation } from '../../types/chat';
-import { User } from '../../types/user';
-import { searchUsers as searchUsersApi } from '../../services/userService';
+import { useEffect, useMemo, useState } from "react";
+import { Conversation } from "../../types/chat";
+import { User } from "../../types/user";
+import { searchUsers as searchUsersApi } from "../../services/userService";
+import { Dropdown } from "../ui/dropdown/Dropdown";
+import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { MoreDotIcon } from "../../icons";
+import { useModal } from "../../hooks/useModal.ts";
+import { Modal } from "../ui/modal.tsx";
+import Button from "../ui/button/Button.tsx";
+import Input from "../form/input/InputField.tsx";
+import Label from "../form/Label.tsx";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -10,42 +18,38 @@ interface ConversationListProps {
   onSearchChange: (searchTerm: string) => void;
 }
 
-/**
- * Component hiển thị danh sách cuộc trò chuyện
- * Bao gồm chức năng tìm kiếm và hiển thị danh sách
- */
 export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   activeConversationId,
   onConversationSelect,
   onSearchChange,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Conversation[]>([]);
+  const [headerDropdownOpen, setHeaderDropdownOpen] = useState(false);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
-  /**
-   * Format thời gian tin nhắn cuối thành dạng dễ đọc
-   */
+  const { isOpen, openModal, closeModal } = useModal();
+
+  // Format thời gian tin nhắn cuối
   const formatTime = (timeString?: string): string => {
-    if (!timeString) return '';
-    
+    if (!timeString) return "";
     const date = new Date(timeString);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
     if (diffInMinutes < 60) return `${diffInMinutes} phút`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} giờ`;
     return `${Math.floor(diffInMinutes / 1440)} ngày`;
   };
 
-  /**
-   * Chuyển đổi User thành Conversation để hiển thị trong kết quả tìm kiếm
-   */
+  // Chuyển đổi User thành Conversation
   const mapUserToConversation = (user: User): Conversation => {
-    const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+    const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
     return {
-      id: user.id, // Tạm dùng id = userId
+      id: user.id,
       participantId: user.id,
       participantName: fullName || user.username,
       participantRole: user.roles?.[0]?.name,
@@ -54,15 +58,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     };
   };
 
-  /**
-   * Tìm kiếm người dùng khi thay đổi từ khóa tìm kiếm
-   */
+  // Tìm kiếm người dùng
   useEffect(() => {
     if (!searchTerm.trim()) {
       setSearchResults([]);
       return;
     }
-
     const timeoutId = setTimeout(async () => {
       try {
         setSearching(true);
@@ -74,33 +75,102 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         setSearching(false);
       }
     }, 300);
-
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Danh sách để hiển thị: kết quả tìm kiếm hoặc danh sách cuộc trò chuyện
+  // Danh sách hiển thị: tìm kiếm hoặc tất cả
   const listToRender = useMemo(
     () => (searchTerm.trim() ? searchResults : conversations),
     [searchTerm, searchResults, conversations]
   );
 
+  // Đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClick = () => setMenuOpenId(null);
+    window.addEventListener("click", handleClick);
+    return () => window.removeEventListener("click", handleClick);
+  }, []);
+
+  // Xử lý lưu modal
+  const handleSave = () => {
+    // Logic lưu thông tin nhóm
+    closeModal();
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Header với tiêu đề và nút menu */}
+      {/* Header */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Trò chuyện</h2>
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
+          <div className="relative inline-block">
+            <button
+              className="dropdown-toggle"
+              onClick={() => setHeaderDropdownOpen(!headerDropdownOpen)}
+            >
+              <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
+            </button>
+            <Dropdown
+              isOpen={headerDropdownOpen}
+              onClose={() => setHeaderDropdownOpen(false)}
+              className="w-40 p-2"
+            >
+              <DropdownItem
+                onItemClick={openModal}
+                className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                Tạo Nhóm
+              </DropdownItem>
+            </Dropdown>
+          </div>
+          <Modal
+            isOpen={isOpen}
+            onClose={closeModal}
+            className="max-w-[700px] m-4"
+          >
+            {/* Nội dung modal tạo nhóm */}
+            <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+              <div className="px-2 pr-14">
+                <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                  Tạo nhóm trò chuyện
+                </h4>
+                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                  Nhập thông tin nhóm để bắt đầu trò chuyện nhóm.
+                </p>
+              </div>
+              <form className="flex flex-col">
+                {/* Thêm các trường tạo nhóm ở đây */}
+                <div className="custom-scrollbar h-[200px] overflow-y-auto px-2 pb-3">
+                  <Label>Tên nhóm</Label>
+                  <Input type="text" placeholder="Nhập tên nhóm..." />
+                  {/* Có thể thêm chọn thành viên ở đây */}
+                </div>
+                <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                  <Button size="sm" variant="outline" onClick={closeModal}>
+                    Đóng
+                  </Button>
+                  <Button size="sm" onClick={handleSave}>
+                    Tạo nhóm
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </Modal>
         </div>
-
         {/* Ô tìm kiếm */}
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
           <input
             type="text"
@@ -127,12 +197,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             <div
               key={conversation.id}
               className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                activeConversationId === conversation.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                activeConversationId === conversation.id
+                  ? "bg-blue-50 border-l-4 border-l-blue-500"
+                  : ""
               }`}
               onClick={() => onConversationSelect(conversation)}
             >
               <div className="flex items-center space-x-3">
-                {/* Avatar người tham gia với status indicator */}
+                {/* Avatar */}
                 <div className="relative w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                   {conversation.participantAvatar ? (
                     <img
@@ -145,13 +217,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       {conversation.participantName.charAt(0).toUpperCase()}
                     </span>
                   )}
-                  
-                  {/* Status indicator dot */}
+                  {/* Status indicator */}
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
-                
                 <div className="flex-1 min-w-0">
-                  {/* Tên người tham gia và thời gian */}
+                  {/* Tên và thời gian */}
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-900 truncate">
                       {conversation.participantName}
@@ -162,17 +232,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       </span>
                     )}
                   </div>
-                  
-                  {/* Vai trò/tin nhắn cuối và số tin nhắn chưa đọc */}
+                  {/* Tin nhắn cuối và số tin chưa đọc */}
                   <div className="flex items-center justify-between mt-1">
                     <p className="text-sm text-gray-500 truncate flex-1">
                       {conversation.lastMessage ? (
                         <span>
-                          <span className="font-medium">{conversation.lastMessageSender}: </span>
+                          <span className="font-medium">
+                            {conversation.lastMessageSender}:{" "}
+                          </span>
                           {conversation.lastMessage}
                         </span>
                       ) : (
-                        'Chưa có tin nhắn'
+                        "Chưa có tin nhắn"
                       )}
                     </p>
                     {conversation.unreadCount > 0 && (
@@ -182,19 +253,57 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     )}
                   </div>
                 </div>
+                {/* Menu ba chấm cho từng conversation */}
+                <div className="relative">
+                  <button
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpenId(
+                        conversation.id === menuOpenId ? null : conversation.id
+                      );
+                    }}
+                  >
+                    <MoreDotIcon className="w-5 h-5 text-gray-500" />
+                  </button>
+                  {menuOpenId === conversation.id && (
+                    <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10">
+                      <button
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Xử lý View More
+                          alert(`View More: ${conversation.participantName}`);
+                          setMenuOpenId(null);
+                        }}
+                      >
+                        View More
+                      </button>
+                      <button
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Xử lý Delete
+                          alert(`Delete: ${conversation.participantName}`);
+                          setMenuOpenId(null);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
-          
-          {/* Thông báo khi không có cuộc trò chuyện */}
+          {/* Không có cuộc trò chuyện */}
           {listToRender.length === 0 && (
-            <div className="p-4 text-sm text-gray-500">Không có cuộc trò chuyện</div>
+            <div className="p-4 text-sm text-gray-500">
+              Không có cuộc trò chuyện
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 };
-
-
-

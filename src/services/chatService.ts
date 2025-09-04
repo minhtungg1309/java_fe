@@ -32,6 +32,30 @@ type ConversationResponse = {
 };
 
 /**
+ * Chuyển đổi ConversationResponse thành Conversation
+ */
+const toConversation = (response: ConversationResponse): Conversation => {
+  const target =
+    response.participants.find(
+      (p) => p.username === response.conversationName
+    ) ?? response.participants[0];
+
+  return {
+    id: response.id,
+    participantId: target?.userId ?? response.id,
+    participantName: response.conversationName,
+    participantAvatar:
+      target?.avatar || response.conversationAvatar || undefined,
+    lastMessage: response.lastMessage || undefined, // ← Lấy tin nhắn cuối từ API
+    lastMessageSender: response.lastMessageSender || undefined, // ← Lấy tên người gửi
+    lastMessageTime: response.modifiedDate,
+    participantRole: undefined,
+    unreadCount: response.unreadCount || 0, // ← Lấy số tin nhắn chưa đọc từ API
+    isActive: false,
+  };
+};
+
+/**
  * Response từ API khi lấy tin nhắn
  */
 type ChatMessageResponse = {
@@ -44,37 +68,16 @@ type ChatMessageResponse = {
 };
 
 /**
- * Chuyển đổi ConversationResponse thành Conversation
- */
-const toConversation = (response: ConversationResponse): Conversation => {
-  const target = response.participants.find(p => p.username === response.conversationName) 
-    ?? response.participants[0];
-
-  return {
-    id: response.id,
-    participantId: target?.userId ?? response.id,
-    participantName: response.conversationName,
-    participantAvatar: target?.avatar || response.conversationAvatar || undefined,
-    lastMessage: response.lastMessage || undefined, // ← Lấy tin nhắn cuối từ API
-    lastMessageSender: response.lastMessageSender || undefined, // ← Lấy tên người gửi
-    lastMessageTime: response.modifiedDate,
-    participantRole: undefined,
-    unreadCount: response.unreadCount || 0, // ← Lấy số tin nhắn chưa đọc từ API
-    isActive: false,
-  };
-};
-
-/**
  * Chuyển đổi ChatMessageResponse thành ChatMessage
  */
 const toChatMessage = (response: ChatMessageResponse) => ({
   id: response.id,
   content: response.message,
-  senderId: response.me ? 'current' : response.sender.userId,
+  senderId: response.me ? "current" : response.sender.userId,
   senderName: response.sender.username,
   senderAvatar: response.sender.avatar, // Thêm nếu backend có avatar
   timestamp: response.createdDate,
-  type: 'text' as const,
+  type: "text" as const,
   isRead: true,
 });
 
@@ -97,13 +100,13 @@ export const getMyConversations = async (): Promise<Conversation[]> => {
  * @param type - Loại cuộc trò chuyện (DIRECT hoặc GROUP)
  */
 export const createConversation = async (
-  participantId: string, 
+  participantId: string,
   type: "DIRECT" | "GROUP" = "DIRECT"
 ): Promise<Conversation> => {
   try {
-    const response = await httpClient.post(API.CONVERSATIONS_CREATE, { 
-      type, 
-      participantIds: [participantId] 
+    const response = await httpClient.post(API.CONVERSATIONS_CREATE, {
+      type,
+      participantIds: [participantId],
     });
     const data = handleApiResponse<ConversationResponse>(response);
     return toConversation(data);
@@ -118,8 +121,8 @@ export const createConversation = async (
  */
 export const getMessages = async (conversationId: string) => {
   try {
-    const response = await httpClient.get(API.MESSAGES_GET, { 
-      params: { conversationId } 
+    const response = await httpClient.get(API.MESSAGES_GET, {
+      params: { conversationId },
     });
     const data = handleApiResponse<ChatMessageResponse[]>(response);
     // Backend trả về theo thứ tự giảm dần, đảo lại để hiển thị tăng dần
@@ -136,9 +139,9 @@ export const getMessages = async (conversationId: string) => {
  */
 export const sendMessage = async (conversationId: string, message: string) => {
   try {
-    const response = await httpClient.post(API.MESSAGES_CREATE, { 
-      conversationId, 
-      message 
+    const response = await httpClient.post(API.MESSAGES_CREATE, {
+      conversationId,
+      message,
     });
     const data = handleApiResponse<ChatMessageResponse>(response);
     return toChatMessage(data);

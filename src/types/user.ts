@@ -1,4 +1,4 @@
-import { Role } from './role';
+import { Role } from "./role";
 
 /**
  * Kiểu dữ liệu cho tạo user mới
@@ -9,10 +9,10 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   dob: string;
-  avatar?: string; 
-  city?: string;   
-  email?: string;  
-  phone?: string;  
+  avatar?: string;
+  city?: string;
+  email?: string;
+  phone?: string;
 }
 
 /**
@@ -24,10 +24,10 @@ export interface UpdateUserRequest {
   dob: string;
   password?: string;
   roles?: string[];
-  avatar?: string; 
-  city?: string;   
-  email?: string;  
-  phone?: string;  
+  avatar?: string;
+  city?: string;
+  email?: string;
+  phone?: string;
 }
 
 /**
@@ -39,9 +39,9 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   dob: string | null;
-  avatar: string | null; 
-  city: string | null;   
-  email: string | null;  
-  phone: string | null;  
+  avatar: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
   roles: Role[] | null;
-} 
+}

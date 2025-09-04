@@ -3,8 +3,13 @@ import { Modal } from "../ui/modal.tsx";
 import Button from "../ui/button/Button.tsx";
 import Input from "../form/input/InputField.tsx";
 import Label from "../form/Label.tsx";
+import { User } from "../../types/user";
 
-export default function UserInfoCard() {
+interface Props {
+  user: User;
+}
+
+export default function UserInfoCard({ user }: Props) {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
     // Handle save logic here
@@ -25,7 +30,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {user.firstName || "Chưa cập nhật"}
               </p>
             </div>
 
@@ -34,7 +39,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {user.lastName || "Chưa cập nhật"}
               </p>
             </div>
 
@@ -43,7 +48,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {user.email || "Chưa cập nhật"}
               </p>
             </div>
 
@@ -52,7 +57,7 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
+                {user.phone || "Chưa cập nhật"}
               </p>
             </div>
 
@@ -61,7 +66,7 @@ export default function UserInfoCard() {
                 Bio
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
+                {user.city || "Chưa cập nhật"}
               </p>
             </div>
           </div>

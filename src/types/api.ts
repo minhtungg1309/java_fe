@@ -32,4 +32,4 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   currentPage: number;
   size: number;
-} 
+}

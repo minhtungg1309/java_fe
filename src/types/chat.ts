@@ -6,9 +6,9 @@ export interface ChatMessage {
   content: string;
   senderId: string;
   senderName: string;
-  senderAvatar?: string;
+  senderAvatar?: string | null;
   timestamp: string;
-  type: 'text' | 'image' | 'file';
+  type: "text" | "image" | "file";
   imageUrl?: string;
   isRead: boolean;
 }
@@ -23,7 +23,7 @@ export interface Conversation {
   participantAvatar?: string;
   participantRole?: string;
   lastMessage?: string;
-  lastMessageSender?: string; // ← Thêm tên người gửi tin nhắn cuối
+  lastMessageSender?: string;
   lastMessageTime?: string;
   unreadCount: number;
   isActive?: boolean;

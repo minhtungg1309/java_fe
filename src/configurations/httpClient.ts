@@ -34,7 +34,7 @@ httpClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ
       removeToken();
-      window.location.href = '/signin';
+      window.location.href = "/signin";
     }
     return Promise.reject(error);
   }

@@ -1,10 +1,14 @@
 import { useModal } from "../../hooks/useModal";
+import { User } from "../../types/user";
 import { Modal } from "../ui/modal.tsx";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 
-export default function UserAddressCard() {
+interface Props {
+  user: User;
+}
+export default function UserAddressCard({ user }: Props) {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
     // Handle save logic here
@@ -26,7 +30,7 @@ export default function UserAddressCard() {
                   Country
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  United States.
+                  {user.city || "Chưa cập nhật"}
                 </p>
               </div>
 
