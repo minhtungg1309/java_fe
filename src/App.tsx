@@ -20,6 +20,7 @@ export default function App() {
           toastOptions={{
             duration: 3000,
             style: {
+              zIndex: 999999,
               background: '#10B981',
               color: '#fff',
               borderRadius: '12px',

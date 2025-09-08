@@ -28,3 +28,13 @@ export interface Conversation {
   unreadCount: number;
   isActive?: boolean;
 }
+
+/**
+ * Payload để tạo cuộc trò chuyện
+ */
+export type CreateConversationPayload = {
+  type: "DIRECT" | "GROUP";
+  participantIds: string[];
+  name?: string;
+  avatarGroup?: string;
+};

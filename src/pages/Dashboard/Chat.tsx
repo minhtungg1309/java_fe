@@ -156,6 +156,11 @@ export default function Chat() {
     );
   }
 
+  const reloadConversations = async () => {
+    const data = await getMyConversations();
+    setConversations(data);
+  };
+
   return (
     <>
       <PageMeta title="Trò chuyện" description="Trang trò chuyện" />
@@ -179,6 +184,7 @@ export default function Chat() {
                   activeConversationId={activeConversation?.id}
                   onConversationSelect={handleConversationSelect}
                   onSearchChange={setSearchTerm}
+                  reloadConversations={reloadConversations}
                 />
               </div>
             </div>

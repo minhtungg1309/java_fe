@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Conversation } from "../../types/chat";
-import { User } from "../../types/user";
-import { searchUsers as searchUsersApi } from "../../services/userService";
+import {
+  searchUsers as searchUsersApi,
+  getUsers,
+} from "../../services/userService";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { MoreDotIcon } from "../../icons";
 import { useModal } from "../../hooks/useModal.ts";
-import { Modal } from "../ui/modal.tsx";
-import Button from "../ui/button/Button.tsx";
-import Input from "../form/input/InputField.tsx";
-import Label from "../form/Label.tsx";
+import { createConversation } from "../../services/chatService"; // Thêm import
+import { User } from "../../types/user"; // Đã có
+import ConversationItem from "./ConversationItem";
+import GroupModal from "./GroupModal";
+import toast from 'react-hot-toast';
 
 interface ConversationListProps {
   conversations: Conversation[];
   activeConversationId?: string;
   onConversationSelect: (conversation: Conversation) => void;
   onSearchChange: (searchTerm: string) => void;
+  reloadConversations: () => Promise<void>; // thêm prop này
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -23,6 +27,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   activeConversationId,
   onConversationSelect,
   onSearchChange,
+  reloadConversations, // nhận prop này
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
@@ -31,6 +36,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const { isOpen, openModal, closeModal } = useModal();
+
+  // Thêm state cho các trường tạo nhóm
+  const [groupName, setGroupName] = useState("");
+  const [groupAvatar, setGroupAvatar] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
 
   // Format thời gian tin nhắn cuối
   const formatTime = (timeString?: string): string => {
@@ -91,11 +102,49 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     return () => window.removeEventListener("click", handleClick);
   }, []);
 
-  // Xử lý lưu modal
-  const handleSave = () => {
-    // Logic lưu thông tin nhóm
-    closeModal();
+  // Hàm xử lý chọn thành viên (ví dụ: checkbox hoặc multi-select)
+  const handleUserSelect = (user: User) => {
+    setSelectedUsers((prev) =>
+      prev.some((u) => u.id === user.id)
+        ? prev.filter((u) => u.id !== user.id)
+        : [...prev, user]
+    );
   };
+
+  // Hàm tạo nhóm
+  const handleSave = async () => {
+    if (!groupName || selectedUsers.length < 2) {
+      toast.error('Tên nhóm và ít nhất 2 thành viên là bắt buộc!');
+      return;
+    }
+    try {
+      await createConversation(
+        selectedUsers.map((u) => u.id),
+        "GROUP",
+        groupName,
+        groupAvatar
+      );
+      // Gọi lại API để cập nhật danh sách cuộc trò chuyện
+      await reloadConversations(); // <-- cập nhật danh sách mới
+      closeModal();
+      setGroupName("");
+      setGroupAvatar("");
+      setSelectedUsers([]);
+      toast.success('Tạo nhóm thành công!');
+    } catch (err) {
+      toast.error('Nhóm đã tồn tại hoặc có lỗi xảy ra!');
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      // Khi mở modal thì load tất cả user
+      getUsers()
+        .then(setAllUsers)
+        .catch(() => setAllUsers([]));
+    }
+  }, [isOpen]);
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -123,39 +172,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               </DropdownItem>
             </Dropdown>
           </div>
-          <Modal
+          <GroupModal
             isOpen={isOpen}
             onClose={closeModal}
-            className="max-w-[700px] m-4"
-          >
-            {/* Nội dung modal tạo nhóm */}
-            <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-              <div className="px-2 pr-14">
-                <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                  Tạo nhóm trò chuyện
-                </h4>
-                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                  Nhập thông tin nhóm để bắt đầu trò chuyện nhóm.
-                </p>
-              </div>
-              <form className="flex flex-col">
-                {/* Thêm các trường tạo nhóm ở đây */}
-                <div className="custom-scrollbar h-[200px] overflow-y-auto px-2 pb-3">
-                  <Label>Tên nhóm</Label>
-                  <Input type="text" placeholder="Nhập tên nhóm..." />
-                  {/* Có thể thêm chọn thành viên ở đây */}
-                </div>
-                <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                  <Button size="sm" variant="outline" onClick={closeModal}>
-                    Đóng
-                  </Button>
-                  <Button size="sm" onClick={handleSave}>
-                    Tạo nhóm
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </Modal>
+            groupName={groupName}
+            setGroupName={setGroupName}
+            groupAvatar={groupAvatar}
+            setGroupAvatar={setGroupAvatar}
+            allUsers={allUsers}
+            selectedUsers={selectedUsers}
+            handleUserSelect={handleUserSelect}
+            handleSave={handleSave}
+          />
         </div>
         {/* Ô tìm kiếm */}
         <div className="relative">
@@ -194,107 +222,27 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[calc(100vh-200px)]">
         <div className="min-h-full">
           {listToRender.map((conversation) => (
-            <div
+            <ConversationItem
               key={conversation.id}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                activeConversationId === conversation.id
-                  ? "bg-blue-50 border-l-4 border-l-blue-500"
-                  : ""
-              }`}
-              onClick={() => onConversationSelect(conversation)}
-            >
-              <div className="flex items-center space-x-3">
-                {/* Avatar */}
-                <div className="relative w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {conversation.participantAvatar ? (
-                    <img
-                      src={conversation.participantAvatar}
-                      alt={conversation.participantName}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-gray-600 font-semibold">
-                      {conversation.participantName.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                  {/* Status indicator */}
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  {/* Tên và thời gian */}
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
-                      {conversation.participantName}
-                    </h3>
-                    {conversation.lastMessageTime && (
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {formatTime(conversation.lastMessageTime)}
-                      </span>
-                    )}
-                  </div>
-                  {/* Tin nhắn cuối và số tin chưa đọc */}
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-sm text-gray-500 truncate flex-1">
-                      {conversation.lastMessage ? (
-                        <span>
-                          <span className="font-medium">
-                            {conversation.lastMessageSender}:{" "}
-                          </span>
-                          {conversation.lastMessage}
-                        </span>
-                      ) : (
-                        "Chưa có tin nhắn"
-                      )}
-                    </p>
-                    {conversation.unreadCount > 0 && (
-                      <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center flex-shrink-0 ml-2">
-                        {conversation.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {/* Menu ba chấm cho từng conversation */}
-                <div className="relative">
-                  <button
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpenId(
-                        conversation.id === menuOpenId ? null : conversation.id
-                      );
-                    }}
-                  >
-                    <MoreDotIcon className="w-5 h-5 text-gray-500" />
-                  </button>
-                  {menuOpenId === conversation.id && (
-                    <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10">
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Xử lý View More
-                          alert(`View More: ${conversation.participantName}`);
-                          setMenuOpenId(null);
-                        }}
-                      >
-                        View More
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Xử lý Delete
-                          alert(`Delete: ${conversation.participantName}`);
-                          setMenuOpenId(null);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+              conversation={conversation}
+              active={activeConversationId === conversation.id}
+              onSelect={() => onConversationSelect(conversation)}
+              menuOpen={menuOpenId === conversation.id}
+              onMenuOpen={() =>
+                setMenuOpenId(
+                  conversation.id === menuOpenId ? null : conversation.id
+                )
+              }
+              onViewMore={() => {
+                alert(`View More: ${conversation.participantName}`);
+                setMenuOpenId(null);
+              }}
+              onDelete={() => {
+                alert(`Delete: ${conversation.participantName}`);
+                setMenuOpenId(null);
+              }}
+              formatTime={formatTime}
+            />
           ))}
           {/* Không có cuộc trò chuyện */}
           {listToRender.length === 0 && (

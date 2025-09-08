@@ -99,4 +99,4 @@ export const getUsers = UserService.getAll;
 export const updateUser = UserService.update;
 export const deleteUser = UserService.delete;
 export const getMyInfo = UserService.getMyInfo;
-export const searchUsers = UserService.search; // thêm export
+export const searchUsers = UserService.search; 

@@ -1,6 +1,6 @@
 import httpClient from "../configurations/httpClient";
 import { API } from "../configurations/configuration";
-import { Conversation } from "../types/chat";
+import { Conversation, CreateConversationPayload } from "../types/chat";
 import { handleApiResponse, handleApiError } from "../utils/apiHelpers";
 
 /**
@@ -35,6 +35,7 @@ type ConversationResponse = {
  * Chuyển đổi ConversationResponse thành Conversation
  */
 const toConversation = (response: ConversationResponse): Conversation => {
+  const isGroup = response.type === "GROUP";
   const target =
     response.participants.find(
       (p) => p.username === response.conversationName
@@ -44,13 +45,14 @@ const toConversation = (response: ConversationResponse): Conversation => {
     id: response.id,
     participantId: target?.userId ?? response.id,
     participantName: response.conversationName,
-    participantAvatar:
-      target?.avatar || response.conversationAvatar || undefined,
-    lastMessage: response.lastMessage || undefined, // ← Lấy tin nhắn cuối từ API
-    lastMessageSender: response.lastMessageSender || undefined, // ← Lấy tên người gửi
+    participantAvatar: isGroup
+      ? response.conversationAvatar || undefined
+      : target?.avatar || undefined,
+    lastMessage: response.lastMessage || undefined,
+    lastMessageSender: response.lastMessageSender || undefined,
     lastMessageTime: response.modifiedDate,
     participantRole: undefined,
-    unreadCount: response.unreadCount || 0, // ← Lấy số tin nhắn chưa đọc từ API
+    unreadCount: response.unreadCount || 0,
     isActive: false,
   };
 };
@@ -94,20 +96,24 @@ export const getMyConversations = async (): Promise<Conversation[]> => {
   }
 };
 
-/**
- * Tạo cuộc trò chuyện mới với người dùng
- * @param participantId - ID của người tham gia
- * @param type - Loại cuộc trò chuyện (DIRECT hoặc GROUP)
- */
 export const createConversation = async (
-  participantId: string,
-  type: "DIRECT" | "GROUP" = "DIRECT"
+  participantIds: string[] | string,
+  type: "DIRECT" | "GROUP" = "DIRECT",
+  name?: string,
+  avatarGroup?: string
 ): Promise<Conversation> => {
   try {
-    const response = await httpClient.post(API.CONVERSATIONS_CREATE, {
+    const payload: CreateConversationPayload = {
       type,
-      participantIds: [participantId],
-    });
+      participantIds: Array.isArray(participantIds)
+        ? participantIds
+        : [participantIds],
+    };
+    if (type === "GROUP") {
+      payload.name = name;
+      payload.avatarGroup = avatarGroup;
+    }
+    const response = await httpClient.post(API.CONVERSATIONS_CREATE, payload);
     const data = handleApiResponse<ConversationResponse>(response);
     return toConversation(data);
   } catch (err) {
