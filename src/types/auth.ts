@@ -12,6 +12,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   result: {
     token: string;
+    role: string;
     authenticated: boolean;
   };
 }

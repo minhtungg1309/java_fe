@@ -20,10 +20,10 @@ export default function AppRoutes(): React.ReactElement {
           </ProtectedRoute>
         }
       >
-        <Route index path="/" element={<Home />} />
+        <Route index path="/" element={<Chat />} />
         <Route path="/permission" element={<Permission />} />
         <Route path="/role" element={<Role />} />
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/user" element={<Home />} />
         <Route path="/profile" element={<UserProfiles />} />
       </Route>
 

@@ -2,8 +2,8 @@
  * Cấu hình chung cho ứng dụng
  */
 export const CONFIG = {
-  //  API: "http://192.168.1.13:8080/api",
-  //  SOCKET: "http://192.168.1.13:8099",
+  //  API: "http://192.168.1.93:8080/api",
+  //  SOCKET: "http://192.168.1.93:8099",
   API: "http://localhost:8080/api",
   SOCKET: "http://localhost:8099",
 } as const;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { logIn, logOut, isAuthenticated } from '../services/authenticationService';
+import { getRoleFromToken } from "../services/tokenService";
 
 export const useAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -11,14 +12,18 @@ export const useAuth = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      await logIn(username, password);
-      
-      // Redirect sau khi đăng nhập thành công
-      navigate('/');
-      
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+
+      const res = await logIn(username, password);
+      const token = res.result?.token;
+      if (token) {
+        const role = getRoleFromToken(token);
+        localStorage.setItem("role", role ?? "ROLE_USER");
+        localStorage.setItem("accessToken", token);
+      }
+
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
       throw err;
     } finally {
       setLoading(false);
@@ -37,4 +42,4 @@ export const useAuth = () => {
     login: handleLogin,
     logout: handleLogout
   };
-}; 
+};
