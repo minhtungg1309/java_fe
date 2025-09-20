@@ -1,17 +1,21 @@
+import React from 'react';
 import { Conversation } from "../../types/chat";
 
 interface ChatHeaderProps {
-  conversation?: Conversation | null;
-  onBackToConversations?: () => void; // Thêm prop này
+  conversation: Conversation | null;
+  onStartCall: (callType: 'audio' | 'video', participantName?: string) => void;
+  onBackToConversations?: () => void;
+  currentUserId?: string;
 }
 
 /**
  * Component hiển thị header của cuộc trò chuyện
- * Bao gồm thông tin người tham gia và các nút hành động
  */
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
   conversation,
+  onStartCall,
   onBackToConversations,
+  currentUserId,
 }) => {
   // Hiển thị placeholder khi chưa chọn cuộc trò chuyện
   if (!conversation) {
@@ -23,6 +27,12 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
     );
   }
+
+  const handleStartCall = (callType: 'audio' | 'video') => {
+    // Get participant info from conversation
+    const participantName = conversation.participantName || 'Unknown User';
+    onStartCall(callType, participantName);
+  };
 
   return (
     <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
@@ -56,20 +66,20 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           {conversation.participantAvatar ? (
             <img
               src={conversation.participantAvatar}
-              alt={conversation.participantName}
+              alt={conversation.participantName || 'User'}
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
             <span className="text-xl text-gray-600 font-semibold">
-              {conversation.participantName.charAt(0).toUpperCase()}
+              {(conversation.participantName || 'U').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
 
-        {/* Thông tin tên và vai trò */}
+        {/* Thông tin tên */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {conversation.participantName}
+            {conversation.participantName || 'Unknown User'}
           </h2>
           {conversation.participantRole && (
             <p className="text-sm text-gray-500">
@@ -79,10 +89,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       </div>
 
-      {/* Các nút hành động - Ẩn trên mobile */}
+      {/* Các nút hành động */}
       <div className="hidden md:flex items-center space-x-2">
         {/* Nút gọi điện */}
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          onClick={() => handleStartCall('audio')}
+          title="Gọi điện"
+        >
           <svg
             className="w-5 h-5 text-gray-500"
             fill="none"
@@ -99,7 +113,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
 
         {/* Nút gọi video */}
-        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          onClick={() => handleStartCall('video')}
+          title="Gọi video"
+        >
           <svg
             className="w-5 h-5 text-gray-500"
             fill="none"
