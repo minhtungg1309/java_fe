@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WebRTCState } from '../../hooks/useWebRTC';
 
 interface CallModalProps {
@@ -12,7 +12,7 @@ interface CallModalProps {
   participantName?: string;
 }
 
-export const CallModal: React.FC<CallModalProps> = ({
+export const CallModal: React.FC<CallModalProps> = ({ 
   isOpen,
   callState,
   localVideoRef,
@@ -22,12 +22,108 @@ export const CallModal: React.FC<CallModalProps> = ({
   onEndCall,
   participantName,
 }) => {
+  // **ADD: Debug logs for component state**
+  console.log('🎥 CallModal render:', {
+    isOpen,
+    callType: callState.callType,
+    hasLocalStream: !!callState.localStream,
+    hasRemoteStream: !!callState.remoteStream,
+    localVideoRef: !!localVideoRef?.current,
+    remoteVideoRef: !!remoteVideoRef?.current,
+    deviceStatus: callState.deviceStatus,
+    isCallActive: callState.isCallActive
+  });
+
+  // **FIX: Local video useEffect - only run when modal is open and element exists**
+  useEffect(() => {
+    // Only run when modal is open and element exists
+    if (!isOpen || !localVideoRef?.current) {
+      return;
+    }
+
+    console.log('🎥 Local video useEffect triggered:', {
+      hasElement: !!localVideoRef?.current,
+      hasStream: !!callState.localStream,
+      streamTracks: callState.localStream?.getTracks().map(t => ({
+        kind: t.kind,
+        enabled: t.enabled,
+        readyState: t.readyState,
+        muted: t.muted
+      })) || []
+    });
+
+    const el = localVideoRef.current;
+    
+    el.srcObject = callState.localStream ?? null;
+    
+    if (callState.localStream) {
+      console.log('🎥 Setting local video srcObject and playing...');
+      el.play().catch(e => {
+        console.warn('Local video play failed:', e);
+        setTimeout(() => {
+          el.play().catch(err => console.warn('Retry local video play failed:', err));
+        }, 100);
+      });
+    } else {
+      console.log('🎥 No local stream to set');
+    }
+    
+    return () => { 
+      if (el) {
+        el.srcObject = null;
+        el.pause();
+      }
+    };
+  }, [isOpen, callState.localStream, localVideoRef]); // **ADD: isOpen dependency**
+
+  // **FIX: Remote video useEffect - only run when modal is open and element exists**
+  useEffect(() => {
+    // Only run when modal is open and element exists
+    if (!isOpen || !remoteVideoRef?.current) {
+      return;
+    }
+
+    console.log('🎥 Remote video useEffect triggered:', {
+      hasElement: !!remoteVideoRef?.current,
+      hasStream: !!callState.remoteStream,
+      streamTracks: callState.remoteStream?.getTracks().map(t => ({
+        kind: t.kind,
+        enabled: t.enabled,
+        readyState: t.readyState,
+        muted: t.muted
+      })) || []
+    });
+
+    const el = remoteVideoRef.current;
+    
+    el.srcObject = callState.remoteStream ?? null;
+    
+    if (callState.remoteStream) {
+      console.log('🎥 Setting remote video srcObject and playing...');
+      el.play().catch(e => {
+        console.warn('Remote video play failed:', e);
+        setTimeout(() => {
+          el.play().catch(err => console.warn('Retry remote video play failed:', err));
+        }, 100);
+      });
+    } else {
+      console.log('🎥 No remote stream to set');
+    }
+    
+    return () => { 
+      if (el) {
+        el.srcObject = null;
+        el.pause();
+      }
+    };
+  }, [isOpen, callState.remoteStream, remoteVideoRef]); // **ADD: isOpen dependency**
+
   if (!isOpen) return null;
 
   const showVideoPlaceholder = callState.callType === 'video' && (!callState.remoteStream || callState.isNoDeviceMode);
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 bg-black z-999999 flex flex-col">
       {/* Error/Warning display */}
       {callState.error && (
         <div className="bg-yellow-500 text-white p-3 text-center">
@@ -70,24 +166,39 @@ export const CallModal: React.FC<CallModalProps> = ({
             ref={remoteVideoRef}
             autoPlay
             playsInline
+            muted={false}
             className="w-full h-full object-cover bg-gray-900"
+            onLoadedMetadata={() => console.log('🎥 Remote video loaded metadata')}
+            onCanPlay={() => console.log('🎥 Remote video can play')}
+            onPlay={() => console.log('🎥 Remote video started playing')}
+            onError={(e) => console.error('🎥 Remote video error:', e)}
           />
         )}
         
         {/* Local video - Picture in picture */}
         {callState.callType === 'video' && (
           <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden">
-            {callState.deviceStatus.hasVideo && callState.localStream ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                <span className="text-white text-xs">No Camera</span>
+            <video
+              ref={localVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{
+                backgroundColor: callState.localStream ? 'transparent' : '#374151'
+              }}
+              onLoadedMetadata={() => console.log('🎥 Local video loaded metadata')}
+              onCanPlay={() => console.log('🎥 Local video can play')}
+              onPlay={() => console.log('🎥 Local video started playing')}
+              onError={(e) => console.error('🎥 Local video error:', e)}
+            />
+            
+            {/* Show overlay only when no stream or no video track */}
+            {(!callState.localStream || !callState.deviceStatus.hasVideo) && (
+              <div className="absolute inset-0 bg-gray-700 flex items-center justify-center">
+                <span className="text-white text-xs">
+                  {!callState.deviceStatus.hasVideo ? 'No Camera' : 'Loading...'}
+                </span>
               </div>
             )}
           </div>
@@ -204,6 +315,15 @@ export const CallModal: React.FC<CallModalProps> = ({
           Video: {callState.deviceStatus.hasVideo ? '✅' : '❌'} | 
           Permission: {callState.deviceStatus.permissionGranted ? '✅' : '❌'}
           {callState.isNoDeviceMode && ' | 🔇 No Device Mode'}
+        </div>
+        
+        {/* Debug info for troubleshooting */}
+        <div className="mt-2 text-center text-gray-500 text-xs">
+          Local Stream: {callState.localStream ? '✅' : '❌'} | 
+          Remote Stream: {callState.remoteStream ? '✅' : '❌'} |
+          Call Type: {callState.callType} |
+          Local Tracks: {callState.localStream?.getTracks().length || 0} |
+          Remote Tracks: {callState.remoteStream?.getTracks().length || 0}
         </div>
       </div>
     </div>

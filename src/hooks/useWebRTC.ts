@@ -319,7 +319,15 @@ export function useWebRTC() {
       console.log('🎬 Final stream tracks:', {
         audioTracks: finalAudioTracks.length,
         videoTracks: finalVideoTracks.length,
-        isNoDeviceMode: !hasAudio && !hasVideo
+        isNoDeviceMode: !hasAudio && !hasVideo,
+        // **ADD: More detailed track info**
+        trackDetails: stream.getTracks().map(t => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          readyState: t.readyState,
+          label: t.label,
+          muted: t.muted
+        }))
       });
 
       setState(prev => ({ 
