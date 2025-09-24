@@ -3,22 +3,22 @@ import { useWebRTC } from './useWebRTC';
 import { useSocket, CallOffer, CallAnswer, IceCandidate, CallEvent } from './useSocket';
 
 export function useCall(currentUserId: string) {
-  // State management
+  // Quản lý state
   const [incomingCall, setIncomingCall] = useState<CallOffer | null>(null);
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string>('');
   const [participantName, setParticipantName] = useState<string>('');
 
-  // WebRTC hook
+  // Hook WebRTC
   const webRTC = useWebRTC();
 
-  // Refs for state access in callbacks
+  // Refs để truy cập state trong callbacks
   const stateRef = useRef({
     currentCallId,
     webRTC,
   });
 
-  // Update refs when state changes
+  // Cập nhật refs khi state thay đổi
   useEffect(() => {
     stateRef.current = {
       currentCallId,
@@ -27,7 +27,7 @@ export function useCall(currentUserId: string) {
   }, [currentCallId, webRTC]);
 
   /**
-   * Generate unique call ID
+   * Tạo ID cuộc gọi duy nhất
    */
   const generateCallId = useCallback(() => {
     const timestamp = Date.now();
@@ -36,7 +36,7 @@ export function useCall(currentUserId: string) {
   }, []);
 
   /**
-   * Get current user info for caller
+   * Lấy thông tin người dùng hiện tại cho người gọi
    */
   const getCurrentUserInfo = useCallback(() => {
     try {
@@ -44,31 +44,31 @@ export function useCall(currentUserId: string) {
       if (userStr) {
         const user = JSON.parse(userStr);
         return {
-          username: user.username || user.name || 'Unknown',
+          username: user.username || user.name || 'Không xác định',
           firstName: user.firstName || user.first_name || '',
           lastName: user.lastName || user.last_name || '',
           avatar: user.avatar || user.profilePicture || '',
-          displayName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Unknown User',
+          displayName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Người dùng không xác định',
         };
       }
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error('Lỗi khi lấy thông tin người dùng:', error);
     }
     
     return {
-      username: 'Unknown',
+      username: 'Không xác định',
       firstName: '',
       lastName: '',
       avatar: '',
-      displayName: 'Unknown User',
+      displayName: 'Người dùng không xác định',
     };
   }, []);
 
   /**
-   * End call internally
+   * Kết thúc cuộc gọi nội bộ
    */
   const endCallInternal = useCallback(() => {
-    console.log('📞 Ending call:', currentCallId);
+    console.log('📞 Kết thúc cuộc gọi:', currentCallId);
     
     const socket = socketRef.current;
     if (socket?.connected && currentCallId) {
@@ -77,7 +77,7 @@ export function useCall(currentUserId: string) {
         callerId: currentUserId,
         calleeId: '',
         event: 'end',
-        reason: 'Call ended by user',
+        reason: 'Cuộc gọi bị kết thúc bởi người dùng',
       });
     }
 
@@ -88,50 +88,50 @@ export function useCall(currentUserId: string) {
     setParticipantName('');
   }, [currentCallId, currentUserId, webRTC]);
 
-  // Separate socket instance for calls
+  // Socket instance riêng cho các cuộc gọi
   const socketRef = useSocket(
-    undefined, // no message handler
+    undefined, // không có message handler
     useCallback((callOffer: CallOffer) => {
-      console.log('📞 Incoming call received:', callOffer);
+      console.log('📞 Nhận cuộc gọi đến:', callOffer);
       
-      // Validate incoming call
+      // Xác thực cuộc gọi đến
       if (!callOffer.callerId || !callOffer.calleeId || callOffer.calleeId !== currentUserId) {
-        console.warn('❌ Invalid incoming call:', callOffer);
+        console.warn('❌ Cuộc gọi đến không hợp lệ:', callOffer);
         return;
       }
       
       setIncomingCall(callOffer);
     }, [currentUserId]),
     
-    // Handle call-answered properly
+    // Xử lý call-answered đúng cách
     useCallback((callAnswer: CallAnswer) => {
-      console.log('📞 Call answered received:', callAnswer);
+      console.log('📞 Nhận phản hồi cuộc gọi:', callAnswer);
       
       const { currentCallId, webRTC } = stateRef.current;
       if (callAnswer.callId === currentCallId) {
-        console.log('✅ Processing call answer for current call');
+        console.log('✅ Xử lý phản hồi cuộc gọi cho cuộc gọi hiện tại');
         webRTC.handleAnswer(callAnswer);
       } else {
-        console.warn('⚠️ Call answer for different call ID:', {
+        console.warn('⚠️ Phản hồi cuộc gọi cho ID khác:', {
           received: callAnswer.callId,
           current: currentCallId
         });
       }
     }, []),
     
-    // Buffer ICE candidates until remote description is set
+    // Buffer ICE candidates cho đến khi remote description được thiết lập
     useCallback((iceCandidate: IceCandidate) => {
-      console.log('🧊 ICE candidate for call:', iceCandidate);
+      console.log('🧊 ICE candidate cho cuộc gọi:', iceCandidate);
       
       const { currentCallId, webRTC } = stateRef.current;
       if (iceCandidate.callId === currentCallId) {
-        // **REMOVE: setTimeout delay**
+        // **ĐÃ XÓA: setTimeout delay**
         webRTC.handleIceCandidate(iceCandidate);
       }
     }, []),
     
     useCallback((callEvent: CallEvent) => {
-      console.log('📞 Call status received:', callEvent);
+      console.log('📞 Nhận trạng thái cuộc gọi:', callEvent);
       
       const { currentCallId } = stateRef.current;
       if (callEvent.callId === currentCallId) {
@@ -156,7 +156,7 @@ export function useCall(currentUserId: string) {
     }, [endCallInternal]),
     
     useCallback((callEvent: CallEvent) => {
-      console.log('📞 Call ended received:', callEvent);
+      console.log('📞 Nhận thông báo kết thúc cuộc gọi:', callEvent);
       
       const { currentCallId } = stateRef.current;
       if (callEvent.callId === currentCallId) {
@@ -166,14 +166,14 @@ export function useCall(currentUserId: string) {
   );
 
   /**
-   * Start a call
+   * Bắt đầu cuộc gọi
    */
   const startCall = useCallback(async (
     targetUserId: string,
     callType: 'audio' | 'video',
     participantName?: string
   ) => {
-    console.log('🚀 Starting call:', { 
+    console.log('🚀 Bắt đầu cuộc gọi:', { 
       currentUserId, 
       targetUserId, 
       callType, 
@@ -181,36 +181,36 @@ export function useCall(currentUserId: string) {
     });
 
     try {
-      // Check socket connection
+      // Kiểm tra kết nối socket
       const socket = socketRef.current;
       if (!socket?.connected) {
-        console.error('❌ Socket not connected');
+        console.error('❌ Socket không kết nối');
         alert('Kết nối mạng không ổn định. Vui lòng thử lại.');
         return;
       }
 
-      console.log('🔌 Socket status:', {
+      console.log('🔌 Trạng thái socket:', {
         connected: socket.connected,
         id: socket.id,
         auth: socket.auth,
       });
 
       if (currentUserId === 'default-user-id') {
-        console.error('❌ Invalid current user ID');
+        console.error('❌ ID người dùng hiện tại không hợp lệ');
         alert('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
         return;
       }
 
-      // Validate inputs
+      // Xác thực đầu vào
       if (!targetUserId || targetUserId === currentUserId) {
-        console.error('❌ Invalid target user ID');
+        console.error('❌ ID người dùng đích không hợp lệ');
         alert('Không thể gọi cho chính mình');
         return;
       }
 
       const offer = await webRTC.createOffer(callType);
       if (!offer) {
-        console.error('❌ Failed to create offer');
+        console.error('❌ Không thể tạo offer');
         alert('Không thể tạo cuộc gọi. Vui lòng kiểm tra camera/microphone.');
         return;
       }
@@ -218,7 +218,7 @@ export function useCall(currentUserId: string) {
       const callId = generateCallId();
       setCurrentCallId(callId);
 
-      // Get current user info for caller info
+      // Lấy thông tin người dùng hiện tại cho thông tin người gọi
       const currentUserInfo = getCurrentUserInfo();
 
       const callData: CallOffer = {
@@ -229,21 +229,21 @@ export function useCall(currentUserId: string) {
         callerInfo: currentUserInfo,
       };
 
-      console.log('📤 Sending call offer with caller info:', callData);
+      console.log('📤 Gửi offer cuộc gọi với thông tin người gọi:', callData);
 
-      // Setup answer handler before sending offer
+      // Thiết lập answer handler trước khi gửi offer
       let answerReceived = false;
       const answerHandler = (answer: any) => {
-        console.log('✅ Call answer event received:', answer);
+        console.log('✅ Nhận sự kiện phản hồi cuộc gọi:', answer);
         answerReceived = true;
       };
       
       socket.once('call-answered', answerHandler);
 
-      // Setup ICE candidate handling
+      // Thiết lập xử lý ICE candidate
       webRTC.setupIceCandidateHandling(
         (candidate) => {
-          console.log('📤 Sending ICE candidate:', candidate);
+          console.log('📤 Gửi ICE candidate:', candidate);
           if (socket.connected) {
             socket.emit('ice-candidate', candidate);
           }
@@ -253,21 +253,21 @@ export function useCall(currentUserId: string) {
         targetUserId
       );
 
-      // Send offer
+      // Gửi offer
       socket.emit('call-offer', callData);
-      console.log('✅ Call offer sent successfully');
+      console.log('✅ Gửi offer cuộc gọi thành công');
 
-      // Increase timeout and check for answer
+      // Tăng timeout và kiểm tra phản hồi
       const timeoutId = setTimeout(() => {
         if (!answerReceived && !webRTC.state.isCallActive) {
-          console.warn('⏰ Call timeout - no response after 60s');
+          console.warn('⏰ Hết thời gian cuộc gọi - không có phản hồi sau 60s');
           alert('Không có phản hồi từ người nhận. Có thể họ không online.');
           socket.off('call-answered', answerHandler);
           endCallInternal();
         }
-      }, 60000); // Increase to 60 seconds
+      }, 60000); // Tăng lên 60 giây
 
-      // Clear timeout when call is answered
+      // Xóa timeout khi cuộc gọi được trả lời
       socket.once('call-answered', () => {
         clearTimeout(timeoutId);
       });
@@ -276,14 +276,14 @@ export function useCall(currentUserId: string) {
       setIsCallModalOpen(true);
 
     } catch (error) {
-      console.error('❌ Error starting call:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Lỗi khi bắt đầu cuộc gọi:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
       alert('Không thể bắt đầu cuộc gọi: ' + errorMessage);
     }
   }, [currentUserId, webRTC, socketRef, generateCallId, endCallInternal, getCurrentUserInfo]);
 
   /**
-   * Accept incoming call
+   * Chấp nhận cuộc gọi đến
    */
   const acceptCall = useCallback(async () => {
     if (!incomingCall) return;
@@ -291,7 +291,7 @@ export function useCall(currentUserId: string) {
     try {
       const answer = await webRTC.createAnswer(incomingCall);
       if (!answer) {
-        console.error('❌ Failed to create answer');
+        console.error('❌ Không thể tạo answer');
         return;
       }
 
@@ -299,10 +299,10 @@ export function useCall(currentUserId: string) {
       if (socket?.connected) {
         socket.emit('call-answer', answer);
         
-        // Setup ICE candidate handling for callee
+        // Thiết lập xử lý ICE candidate cho người nhận
         webRTC.setupIceCandidateHandling(
           (candidate) => {
-            console.log('📤 Sending ICE candidate (callee):', candidate);
+            console.log('📤 Gửi ICE candidate (callee):', candidate);
             if (socket.connected) {
               socket.emit('ice-candidate', candidate);
             }
@@ -314,18 +314,18 @@ export function useCall(currentUserId: string) {
       }
 
       setCurrentCallId(incomingCall.callId);
-      setParticipantName(incomingCall.callerInfo?.displayName || 'Unknown Caller');
+      setParticipantName(incomingCall.callerInfo?.displayName || 'Người gọi không xác định');
       setIsCallModalOpen(true);
       setIncomingCall(null);
       
     } catch (error) {
-      console.error('❌ Error accepting call:', error);
+      console.error('❌ Lỗi khi chấp nhận cuộc gọi:', error);
       rejectCall();
     }
   }, [incomingCall, webRTC, socketRef, currentUserId]);
 
   /**
-   * Reject incoming call
+   * Từ chối cuộc gọi đến
    */
   const rejectCall = useCallback(() => {
     if (!incomingCall) return;
@@ -337,7 +337,7 @@ export function useCall(currentUserId: string) {
         callerId: incomingCall.callerId,
         calleeId: currentUserId,
         event: 'reject',
-        reason: 'Call rejected by user',
+        reason: 'Cuộc gọi bị từ chối bởi người dùng',
       });
     }
 
@@ -345,16 +345,16 @@ export function useCall(currentUserId: string) {
   }, [incomingCall, socketRef, currentUserId]);
 
   /**
-   * End current call
+   * Kết thúc cuộc gọi hiện tại
    */
   const endCall = useCallback(() => {
     endCallInternal();
   }, [endCallInternal]);
 
-  // **FIXED: Debug localStorage properly**
+  // **ĐÃ SỬA: Debug localStorage đúng cách**
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('=== localStorage Debug ===');
+      console.log('=== Debug localStorage ===');
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         const value = localStorage.getItem(key || '');
@@ -363,9 +363,9 @@ export function useCall(currentUserId: string) {
     }
   }, []);
 
-  // Early return if no valid user ID
+  // Thoát sớm nếu không có ID người dùng hợp lệ
   if (!currentUserId || currentUserId === 'default-user-id') {
-    console.warn('⚠️ useCall disabled: Invalid user ID');
+    console.warn('⚠️ useCall bị vô hiệu hóa: ID người dùng không hợp lệ');
     return {
       webRTC: { state: {} } as any,
       incomingCall: null,

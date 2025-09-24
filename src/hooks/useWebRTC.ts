@@ -40,12 +40,12 @@ export function useWebRTC() {
   const localVideoRef = useRef<HTMLVideoElement>(null!);
   const remoteVideoRef = useRef<HTMLVideoElement>(null!);
   
-  // **ADD: ICE candidate buffering**
+  // THÊM: Bộ đệm ICE candidate
   const iceCandidateBufferRef = useRef<IceCandidate[]>([]);
   const remoteDescriptionSetRef = useRef<boolean>(false);
   const isCallerRef = useRef<boolean>(false);
 
-  // ICE servers configuration
+  // Cấu hình máy chủ ICE
   const iceServers = useMemo(() => ({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
@@ -56,7 +56,7 @@ export function useWebRTC() {
   }), []);
 
   /**
-   * Create silent audio track for calls without microphone
+   * Tạo track âm thanh im lặng cho cuộc gọi không có microphone
    */
   const createSilentAudioTrack = useCallback(() => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -65,11 +65,11 @@ export function useWebRTC() {
     
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    gainNode.gain.value = 0; // Silent
+    gainNode.gain.value = 0; // Im lặng
     oscillator.frequency.value = 440;
     oscillator.start();
     
-    // Create MediaStream from audio context
+    // Tạo MediaStream từ audio context
     const destination = audioContext.createMediaStreamDestination();
     gainNode.connect(destination);
     
@@ -77,7 +77,7 @@ export function useWebRTC() {
   }, []);
 
   /**
-   * Create black video track for calls without camera
+   * Tạo track video đen cho cuộc gọi không có camera
    */
   const createBlackVideoTrack = useCallback(() => {
     const canvas = document.createElement('canvas');
@@ -88,18 +88,18 @@ export function useWebRTC() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add text overlay
+    // Thêm text overlay
     ctx.fillStyle = 'white';
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('No Camera', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Không có Camera', canvas.width / 2, canvas.height / 2);
     
     const stream = canvas.captureStream(15); // 15fps
     return stream.getVideoTracks()[0];
   }, []);
 
   /**
-   * Kiểm tra WebRTC support
+   * Kiểm tra hỗ trợ WebRTC
    */
   const checkWebRTCSupport = useCallback(() => {
     const isLocalhost = window.location.hostname === 'localhost' || 
@@ -138,7 +138,7 @@ export function useWebRTC() {
         return { hasAudio: false, hasVideo: false };
       }
 
-      // Try to get device list first
+      // Thử lấy danh sách thiết bị trước
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioDevices = devices.filter(device => device.kind === 'audioinput');
@@ -147,7 +147,7 @@ export function useWebRTC() {
         const hasAudio = audioDevices.length > 0;
         const hasVideo = videoDevices.length > 0;
         
-        console.log('🎧 Available devices:', {
+        console.log('🎧 Thiết bị có sẵn:', {
           audioDevices: audioDevices.length,
           videoDevices: videoDevices.length,
         });
@@ -164,15 +164,15 @@ export function useWebRTC() {
 
         return { hasAudio, hasVideo };
       } catch (enumerateError) {
-        console.warn('Cannot enumerate devices:', enumerateError);
+        console.warn('Không thể liệt kê thiết bị:', enumerateError);
         
-        // Fallback: try to get media to check availability
+        // Fallback: thử lấy media để kiểm tra tính khả dụng
         try {
           const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
           tempStream.getTracks().forEach(track => track.stop());
           return { hasAudio: true, hasVideo: true };
         } catch (mediaError) {
-          console.warn('No media devices available:', mediaError);
+          console.warn('Không có thiết bị media nào khả dụng:', mediaError);
           setState(prev => ({
             ...prev,
             deviceStatus: { hasAudio: false, hasVideo: false, permissionGranted: false },
@@ -182,7 +182,7 @@ export function useWebRTC() {
         }
       }
     } catch (error) {
-      console.error('Device check failed:', error);
+      console.error('Kiểm tra thiết bị thất bại:', error);
       setState(prev => ({
         ...prev,
         deviceStatus: { hasAudio: false, hasVideo: false, permissionGranted: false },
@@ -203,9 +203,9 @@ export function useWebRTC() {
     const peerConnection = new RTCPeerConnection(iceServers);
     peerConnectionRef.current = peerConnection;
 
-    // **IMPROVED: Better track handling**
+    // CẢI THIỆN: Xử lý track tốt hơn
     peerConnection.ontrack = (event) => {
-      console.log('🎥 Remote track received:', {
+      console.log('🎥 Nhận track từ xa:', {
         kind: event.track.kind,
         enabled: event.track.enabled,
         readyState: event.track.readyState,
@@ -218,26 +218,26 @@ export function useWebRTC() {
         
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = remoteStream;
-          // **Force play for audio/video**
-          remoteVideoRef.current.play().catch(e => console.warn('Remote video play failed:', e));
+          // BẮT BUỘC play cho audio/video
+          remoteVideoRef.current.play().catch(e => console.warn('Phát video từ xa thất bại:', e));
         }
       }
     };
 
-    // **ADD: Connection state monitoring**
+    // THÊM: Theo dõi trạng thái kết nối
     peerConnection.onconnectionstatechange = () => {
-      console.log('🔗 Connection state:', peerConnection.connectionState);
+      console.log('🔗 Trạng thái kết nối:', peerConnection.connectionState);
     };
 
     peerConnection.oniceconnectionstatechange = () => {
-      console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
+      console.log('🧊 Trạng thái kết nối ICE:', peerConnection.iceConnectionState);
     };
 
     return peerConnection;
   }, [iceServers]);
 
   /**
-   * **IMPROVED: Media stream with better constraints**
+   * CẢI THIỆN: Media stream với ràng buộc tốt hơn
    */
   const startMediaStream = useCallback(async (callType: 'audio' | 'video') => {
     try {
@@ -248,7 +248,7 @@ export function useWebRTC() {
       setState(prev => ({ ...prev, error: null }));
       const { hasAudio, hasVideo } = await checkMediaDevices();
       
-      console.log('🎯 Device availability:', { hasAudio, hasVideo, callType });
+      console.log('🎯 Tình trạng thiết bị:', { hasAudio, hasVideo, callType });
 
       let stream: MediaStream;
 
@@ -270,7 +270,7 @@ export function useWebRTC() {
           };
 
           stream = await navigator.mediaDevices.getUserMedia(constraints);
-          console.log('✅ Real media stream obtained:', {
+          console.log('✅ Lấy stream media thật thành công:', {
             audioTracks: stream.getAudioTracks().length,
             videoTracks: stream.getVideoTracks().length,
             tracks: stream.getTracks().map(t => ({
@@ -281,46 +281,46 @@ export function useWebRTC() {
           });
           
         } catch (realMediaError) {
-          console.warn('Real media failed, creating synthetic stream:', realMediaError);
+          console.warn('Media thật thất bại, tạo stream tổng hợp:', realMediaError);
           stream = new MediaStream();
         }
       } else {
-        console.log('No devices available, creating synthetic stream');
+        console.log('Không có thiết bị nào khả dụng, tạo stream tổng hợp');
         stream = new MediaStream();
       }
 
-      // Add synthetic tracks if needed
+      // Thêm track tổng hợp nếu cần
       const audioTracks = stream.getAudioTracks();
       const videoTracks = stream.getVideoTracks();
 
       if (audioTracks.length === 0 && (callType === 'audio' || callType === 'video')) {
-        console.log('Adding synthetic audio track');
+        console.log('Thêm track âm thanh tổng hợp');
         try {
           const silentTrack = createSilentAudioTrack();
           stream.addTrack(silentTrack);
         } catch (audioError) {
-          console.warn('Failed to create silent audio track:', audioError);
+          console.warn('Tạo track âm thanh im lặng thất bại:', audioError);
         }
       }
 
       if (videoTracks.length === 0 && callType === 'video') {
-        console.log('Adding synthetic video track');
+        console.log('Thêm track video tổng hợp');
         try {
           const blackTrack = createBlackVideoTrack();
           stream.addTrack(blackTrack);
         } catch (videoError) {
-          console.warn('Failed to create black video track:', videoError);
+          console.warn('Tạo track video đen thất bại:', videoError);
         }
       }
 
       const finalAudioTracks = stream.getAudioTracks();
       const finalVideoTracks = stream.getVideoTracks();
       
-      console.log('🎬 Final stream tracks:', {
+      console.log('🎬 Track stream cuối cùng:', {
         audioTracks: finalAudioTracks.length,
         videoTracks: finalVideoTracks.length,
         isNoDeviceMode: !hasAudio && !hasVideo,
-        // **ADD: More detailed track info**
+        // THÊM: Thông tin track chi tiết hơn
         trackDetails: stream.getTracks().map(t => ({
           kind: t.kind,
           enabled: t.enabled,
@@ -342,24 +342,24 @@ export function useWebRTC() {
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        localVideoRef.current.muted = true; // Prevent echo
-        localVideoRef.current.play().catch(e => console.warn('Local video play failed:', e));
+        localVideoRef.current.muted = true; // Tránh echo
+        localVideoRef.current.play().catch(e => console.warn('Phát video local thất bại:', e));
       }
 
       return stream;
 
     } catch (error) {
-      console.error('Error in startMediaStream:', error);
+      console.error('Lỗi trong startMediaStream:', error);
       
       try {
-        console.log('Creating emergency synthetic stream');
+        console.log('Tạo stream tổng hợp khẩn cấp');
         const emergencyStream = new MediaStream();
         
         try {
           const silentTrack = createSilentAudioTrack();
           emergencyStream.addTrack(silentTrack);
         } catch (e) {
-          console.warn('Failed to add silent track to emergency stream:', e);
+          console.warn('Thêm track im lặng vào stream khẩn cấp thất bại:', e);
         }
 
         setState(prev => ({ 
@@ -374,7 +374,7 @@ export function useWebRTC() {
 
         return emergencyStream;
       } catch (emergencyError) {
-        console.error('Emergency stream creation failed:', emergencyError);
+        console.error('Tạo stream khẩn cấp thất bại:', emergencyError);
         const errorMessage = 'Không thể khởi tạo cuộc gọi. Vui lòng thử lại.';
         setState(prev => ({ ...prev, error: errorMessage }));
         throw new Error(errorMessage);
@@ -383,23 +383,23 @@ export function useWebRTC() {
   }, [checkMediaDevices, createSilentAudioTrack, createBlackVideoTrack, checkWebRTCSupport]);
 
   /**
-   * **FIXED: Create offer with proper setup**
+   * SỬA: Tạo offer cho cuộc gọi video
    */
   const createOffer = useCallback(async (callType: 'audio' | 'video'): Promise<CallOffer | null> => {
     try {
-      console.log('📞 Creating offer for:', callType);
+      console.log('📞 Tạo offer cho:', callType);
       
       const peerConnection = initializePeerConnection();
       const stream = await startMediaStream(callType);
 
-      // **Mark as caller**
+      // Đánh dấu là người gọi
       isCallerRef.current = true;
       remoteDescriptionSetRef.current = false;
       iceCandidateBufferRef.current = [];
 
-      // **Add tracks properly**
+      // Thêm track đúng cách
       stream.getTracks().forEach(track => {
-        console.log('➕ Adding track to peer connection:', {
+        console.log('➕ Thêm track vào peer connection:', {
           kind: track.kind,
           enabled: track.enabled,
           readyState: track.readyState
@@ -413,7 +413,7 @@ export function useWebRTC() {
       });
       
       await peerConnection.setLocalDescription(offer);
-      console.log('✅ Offer created and local description set');
+      console.log('✅ Tạo offer và đặt local description thành công');
 
       setState(prev => ({ ...prev, isCallActive: true }));
 
@@ -426,29 +426,29 @@ export function useWebRTC() {
         callId: '',
       };
     } catch (error) {
-      console.error('❌ Error creating offer:', error);
+      console.error('❌ Lỗi tạo offer:', error);
       return null;
     }
   }, [initializePeerConnection, startMediaStream]);
 
   /**
-   * **FIXED: Create answer with proper setup**
+   * SỬA: Tạo answer với thiết lập đúng
    */
   const createAnswer = useCallback(async (offer: CallOffer): Promise<CallAnswer | null> => {
     try {
-      console.log('📞 Creating answer for offer:', offer.callType);
+      console.log('📞 Tạo answer cho offer:', offer.callType);
       
       const peerConnection = initializePeerConnection();
       const stream = await startMediaStream(offer.callType);
 
-      // **Mark as callee**
+      // Đánh dấu là người nhận
       isCallerRef.current = false;
       remoteDescriptionSetRef.current = false;
       iceCandidateBufferRef.current = [];
 
-      // **Add tracks first**
+      // Thêm track trước
       stream.getTracks().forEach(track => {
-        console.log('➕ Adding track to peer connection (callee):', {
+        console.log('➕ Thêm track vào peer connection (callee):', {
           kind: track.kind,
           enabled: track.enabled,
           readyState: track.readyState
@@ -456,18 +456,18 @@ export function useWebRTC() {
         peerConnection.addTrack(track, stream);
       });
 
-      // **Set remote description**
+      // Đặt remote description
       await peerConnection.setRemoteDescription({
         type: 'offer',
         sdp: offer.sdp,
       });
       
-      console.log('✅ Remote description set (callee)');
+      console.log('✅ Đặt remote description thành công (callee)');
       remoteDescriptionSetRef.current = true;
 
-      // **Process buffered ICE candidates**
+      // Xử lý ICE candidate đã buffer
       if (iceCandidateBufferRef.current.length > 0) {
-        console.log(`🧊 Processing ${iceCandidateBufferRef.current.length} buffered ICE candidates`);
+        console.log(`🧊 Xử lý ${iceCandidateBufferRef.current.length} ICE candidate đã buffer`);
         for (const candidate of iceCandidateBufferRef.current) {
           try {
             await peerConnection.addIceCandidate({
@@ -476,7 +476,7 @@ export function useWebRTC() {
               sdpMLineIndex: candidate.sdpMLineIndex,
             });
           } catch (iceError) {
-            console.warn('Failed to add buffered ICE candidate:', iceError);
+            console.warn('Thêm ICE candidate đã buffer thất bại:', iceError);
           }
         }
         iceCandidateBufferRef.current = [];
@@ -484,7 +484,7 @@ export function useWebRTC() {
 
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
-      console.log('✅ Answer created and local description set');
+      console.log('✅ Tạo answer và đặt local description thành công');
 
       setState(prev => ({ ...prev, isCallActive: true }));
 
@@ -496,17 +496,17 @@ export function useWebRTC() {
         callId: offer.callId,
       };
     } catch (error) {
-      console.error('❌ Error creating answer:', error);
+      console.error('❌ Lỗi tạo answer:', error);
       return null;
     }
   }, [initializePeerConnection, startMediaStream]);
 
   /**
-   * **FIXED: Handle answer with ICE candidate processing**
+   * SỬA: Xử lý answer với việc xử lý ICE candidate
    */
   const handleAnswer = useCallback(async (answer: CallAnswer) => {
     try {
-      console.log('📞 Processing answer:', answer);
+      console.log('📞 Xử lý answer:', answer);
       
       if (peerConnectionRef.current) {
         await peerConnectionRef.current.setRemoteDescription({
@@ -514,12 +514,12 @@ export function useWebRTC() {
           sdp: answer.sdp,
         });
         
-        console.log('✅ Remote description set successfully (caller)');
+        console.log('✅ Đặt remote description thành công (caller)');
         remoteDescriptionSetRef.current = true;
         
-        // **Process buffered ICE candidates**
+        // Xử lý ICE candidate đã buffer
         if (iceCandidateBufferRef.current.length > 0) {
-          console.log(`🧊 Processing ${iceCandidateBufferRef.current.length} buffered ICE candidates`);
+          console.log(`🧊 Xử lý ${iceCandidateBufferRef.current.length} ICE candidate đã buffer`);
           
           for (const candidate of iceCandidateBufferRef.current) {
             try {
@@ -528,54 +528,54 @@ export function useWebRTC() {
                 sdpMid: candidate.sdpMid,
                 sdpMLineIndex: candidate.sdpMLineIndex,
               });
-              console.log('✅ Buffered ICE candidate added');
+              console.log('✅ Thêm ICE candidate đã buffer thành công');
             } catch (iceError) {
-              console.error('❌ Error adding buffered ICE candidate:', iceError);
+              console.error('❌ Lỗi thêm ICE candidate đã buffer:', iceError);
             }
           }
           
-          // Clear buffer
+          // Xóa buffer
           iceCandidateBufferRef.current = [];
         }
       }
     } catch (error) {
-      console.error('❌ Error handling answer:', error);
+      console.error('❌ Lỗi xử lý answer:', error);
     }
   }, []);
 
   /**
-   * **FIXED: Handle ICE candidate with buffering**
+   * SỬA: Xử lý ICE candidate với buffer
    */
   const handleIceCandidate = useCallback(async (candidate: IceCandidate) => {
     try {
       if (!peerConnectionRef.current) {
-        console.warn('⚠️ No peer connection for ICE candidate');
+        console.warn('⚠️ Không có peer connection cho ICE candidate');
         return;
       }
 
-      // **Buffer ICE candidates if remote description not set yet**
+      // Buffer ICE candidate nếu remote description chưa được đặt
       if (!remoteDescriptionSetRef.current) {
-        console.log('🧊 Buffering ICE candidate (remote description not set yet)');
+        console.log('🧊 Buffer ICE candidate (remote description chưa được đặt)');
         iceCandidateBufferRef.current.push(candidate);
         return;
       }
 
-      // **Add ICE candidate immediately if remote description is set**
+      // Thêm ICE candidate ngay lập tức nếu remote description đã được đặt
       await peerConnectionRef.current.addIceCandidate({
         candidate: candidate.candidate,
         sdpMid: candidate.sdpMid,
         sdpMLineIndex: candidate.sdpMLineIndex,
       });
       
-      console.log('✅ ICE candidate added successfully');
+      console.log('✅ Thêm ICE candidate thành công');
       
     } catch (error) {
-      console.error('❌ Error handling ICE candidate:', error);
+      console.error('❌ Lỗi xử lý ICE candidate:', error);
     }
   }, []);
 
   /**
-   * Toggle video (only works if device is available)
+   * Bật/tắt video (chỉ hoạt động nếu thiết bị khả dụng)
    */
   const toggleVideo = useCallback(() => {
     if (state.localStream && state.deviceStatus.hasVideo) {
@@ -588,7 +588,7 @@ export function useWebRTC() {
   }, [state.localStream, state.deviceStatus.hasVideo]);
 
   /**
-   * Toggle audio (only works if device is available)
+   * Bật/tắt audio (chỉ hoạt động nếu thiết bị khả dụng)
    */
   const toggleAudio = useCallback(() => {
     if (state.localStream && state.deviceStatus.hasAudio) {
@@ -601,7 +601,7 @@ export function useWebRTC() {
   }, [state.localStream, state.deviceStatus.hasAudio]);
 
   /**
-   * **FIXED: End call with proper cleanup**
+   * SỬA: Kết thúc cuộc gọi với dọn dẹp đúng cách
    */
   const endCall = useCallback(() => {
     if (state.localStream) {
@@ -613,7 +613,7 @@ export function useWebRTC() {
       peerConnectionRef.current = null;
     }
 
-    // **Reset all refs**
+    // Reset tất cả refs
     iceCandidateBufferRef.current = [];
     remoteDescriptionSetRef.current = false;
     isCallerRef.current = false;
@@ -647,7 +647,7 @@ export function useWebRTC() {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log('🧊 ICE candidate generated:', {
+          console.log('🧊 ICE candidate được tạo:', {
             candidate: event.candidate.candidate.substring(0, 50) + '...',
             sdpMid: event.candidate.sdpMid,
             sdpMLineIndex: event.candidate.sdpMLineIndex
