@@ -24,74 +24,64 @@ export interface IncomingMessage {
 }
 
 /**
- * Cấu trúc call offer
+ * Signaling cho cuộc gọi
  */
 export interface CallOffer {
-  callerId: string;
-  calleeId: string;
+  conversationId: string;
   sdp: string;
-  type: string;
+  type: 'offer';
   callType: 'audio' | 'video';
   callId: string;
-  // Add caller information
+  callerId?: string; // **Optional - backend sẽ set**
   callerInfo?: {
     username: string;
     firstName?: string;
     lastName?: string;
     avatar?: string;
-    displayName?: string;
+    displayName: string;
   };
 }
 
-/**
- * Cấu trúc call answer
- */
 export interface CallAnswer {
-  callerId: string;
-  calleeId: string;
+  conversationId: string;
   sdp: string;
-  type: string;
+  type: 'answer';
   callId: string;
+  // **BỎ callerId, calleeId - backend tự xử lý**
 }
 
-/**
- * Cấu trúc ICE candidate
- */
+export interface CallEvent {
+  conversationId: string;
+  callId: string;
+  event: 'accept' | 'reject' | 'busy' | 'end' | 'offline' | 'error';
+  reason?: string;
+  // **BỎ callerId, calleeId - backend tự xử lý**
+}
+
 export interface IceCandidate {
+  conversationId: string;
   candidate: string;
   sdpMid: string;
   sdpMLineIndex: number;
   callId: string;
-  fromUserId: string;
-  toUserId: string;
+  // **BỎ fromUserId - backend tự xử lý**
 }
 
 /**
- * Cấu trúc call event (status)
- */
-export interface CallEvent {
-  callId: string;
-  callerId: string;
-  calleeId: string;
-  event: 'accept' | 'reject' | 'busy' | 'end' | 'offline' | 'error';
-  reason?: string;
-}
-
-/**
- * Định nghĩa các event từ server đến client
+ * Event từ server → client
  */
 type ServerToClientEvents = {
   message: (message: string | IncomingMessage) => void;
   'incoming-call': (callOffer: CallOffer) => void;
   'call-answer': (callAnswer: CallAnswer) => void;
-  'call-answered': (callAnswer: CallAnswer) => void; // **ADD THIS**
+  'call-answered': (callAnswer: CallAnswer) => void; // confirm answer
   'ice-candidate': (iceCandidate: IceCandidate) => void;
   'call-status': (callEvent: CallEvent) => void;
   'call-ended': (callEvent: CallEvent) => void;
 };
 
 /**
- * Định nghĩa các event từ client đến server
+ * Event từ client → server
  */
 type ClientToServerEvents = {
   'call-offer': (callOffer: CallOffer) => void;
@@ -101,16 +91,7 @@ type ClientToServerEvents = {
 };
 
 /**
- * Hook quản lý kết nối WebSocket với server
- * Hỗ trợ kết nối tự động, reconnect và xử lý tin nhắn + call
- * 
- * @param onMessage - Callback xử lý tin nhắn đến
- * @param onIncomingCall - Callback xử lý cuộc gọi đến
- * @param onCallAnswer - Callback xử lý trả lời cuộc gọi
- * @param onIceCandidate - Callback xử lý ICE candidate
- * @param onCallStatus - Callback xử lý trạng thái cuộc gọi
- * @param onCallEnded - Callback xử lý kết thúc cuộc gọi
- * @returns Reference đến socket instance
+ * Hook quản lý socket kết nối
  */
 export function useSocket(
   onMessage?: (data: IncomingMessage) => void,
@@ -121,8 +102,8 @@ export function useSocket(
   onCallEnded?: (callEvent: CallEvent) => void
 ) {
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
-  
-  // Store callbacks in refs to avoid re-creating socket connection
+
+  // callback ref để giữ function mới nhất
   const callbacksRef = useRef({
     onMessage,
     onIncomingCall,
@@ -132,7 +113,6 @@ export function useSocket(
     onCallEnded,
   });
 
-  // Update callbacks
   useEffect(() => {
     callbacksRef.current = {
       onMessage,
@@ -144,116 +124,79 @@ export function useSocket(
     };
   }, [onMessage, onIncomingCall, onCallAnswer, onIceCandidate, onCallStatus, onCallEnded]);
 
-  // Khởi tạo và quản lý kết nối socket
   useEffect(() => {
     if (!socketRef.current) {
-      console.log('Initializing socket connection...');
+      console.log('🔌 Initializing socket connection...');
 
-      // Get user ID for connection
       const getUserId = (): string => {
         try {
           const token = getToken();
           if (token) {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.sub || payload.userId || payload.user_id;
+            return payload.sub || payload.userId || payload.user_id || 'default-user-id';
           }
-        } catch (error) {
-          console.error('Error parsing token:', error);
+        } catch (err) {
+          console.error('❌ Error parsing token:', err);
         }
-        
-        return localStorage.getItem('userId') || 
-               localStorage.getItem('username') || 
-               'default-user-id';
+        return 'default-user-id';
       };
 
       const userId = getUserId();
       const token = getToken() ?? '';
+
+      console.log('🔍 Socket connection params:', {
+        userId,
+        hasToken: !!token,
+      });
+
       const connectionUrl = `${CONFIG.SOCKET}?token=${encodeURIComponent(token)}&userId=${encodeURIComponent(userId)}`;
 
-      console.log('Connecting socket with userId:', userId);
-
-      // Khởi tạo socket với cấu hình
       socketRef.current = io(connectionUrl, {
         transports: ['websocket'],
         reconnection: true,
-        reconnectionAttempts: Infinity,
+        reconnectionAttempts: 5,
         reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
         timeout: 20000,
       });
 
-      // Xử lý sự kiện kết nối
+      // **CLEAN: System events**
       socketRef.current.on('connect', () => {
         console.log('✅ Socket connected:', socketRef.current?.id);
       });
 
-      // Xử lý sự kiện ngắt kết nối
       socketRef.current.on('disconnect', (reason) => {
         console.log('❌ Socket disconnected:', reason);
       });
 
-      // Xử lý lỗi kết nối
-      socketRef.current.on('connect_error', (error) => {
-        console.error('❌ Socket connection error:', error);
-      });
-
-      // Xử lý tin nhắn đến
-      socketRef.current.on('message', (message: string | IncomingMessage) => {
+      // **CLEAN: Business events**
+      socketRef.current.on('message', (msg) => {
         try {
-          const parsed: IncomingMessage =
-            typeof message === 'string' ? JSON.parse(message) : message;
-          console.log('📨 Message received:', parsed);
+          const parsed: IncomingMessage = typeof msg === 'string' ? JSON.parse(msg) : msg;
           callbacksRef.current.onMessage?.(parsed);
         } catch (e) {
-          console.error('Invalid socket message:', e);
+          console.error('❌ Invalid socket message:', e);
         }
       });
 
-      // Xử lý cuộc gọi đến
-      socketRef.current.on('incoming-call', (callOffer: CallOffer) => {
-        console.log('📞 Incoming call received:', callOffer);
-        callbacksRef.current.onIncomingCall?.(callOffer);
+      socketRef.current.on('incoming-call', (offer) => {
+        console.log('📞 Incoming call offer:', offer);
+        callbacksRef.current.onIncomingCall?.(offer);
       });
 
-      // Xử lý trả lời cuộc gọi
-      socketRef.current.on('call-answer', (callAnswer: CallAnswer) => {
-        console.log('✅ Call answer received:', callAnswer);
-        callbacksRef.current.onCallAnswer?.(callAnswer);
-      });
+      socketRef.current.on('call-answer', (ans) => callbacksRef.current.onCallAnswer?.(ans));
+      socketRef.current.on('call-answered', (ans) => callbacksRef.current.onCallAnswer?.(ans));
+      socketRef.current.on('ice-candidate', (ice) => callbacksRef.current.onIceCandidate?.(ice));
+      socketRef.current.on('call-status', (evt) => callbacksRef.current.onCallStatus?.(evt));
+      socketRef.current.on('call-ended', (evt) => callbacksRef.current.onCallEnded?.(evt));
 
-      // **ADD: Handle call-answered event**
-      socketRef.current.on('call-answered', (callAnswer: CallAnswer) => {
-        console.log('✅ Call answered received:', callAnswer);
-        callbacksRef.current.onCallAnswer?.(callAnswer);
-      });
-
-      // Xử lý ICE candidate
-      socketRef.current.on('ice-candidate', (iceCandidate: IceCandidate) => {
-        console.log('🧊 ICE candidate received:', iceCandidate);
-        callbacksRef.current.onIceCandidate?.(iceCandidate);
-      });
-
-      // Xử lý trạng thái cuộc gọi
-      socketRef.current.on('call-status', (callEvent: CallEvent) => {
-        console.log('📞 Call status received:', callEvent);
-        callbacksRef.current.onCallStatus?.(callEvent);
-      });
-
-      // Xử lý kết thúc cuộc gọi
-      socketRef.current.on('call-ended', (callEvent: CallEvent) => {
-        console.log('📞 Call ended received:', callEvent);
-        callbacksRef.current.onCallEnded?.(callEvent);
-      });
-
-      // Debug: Log all events
+      // **CLEAN: Only log in development**
       if (process.env.NODE_ENV === 'development') {
         socketRef.current.onAny((event, ...args) => {
-          console.log('🔍 Socket event:', event, args);
+          console.log(`🔍 Socket event: ${event}`, args);
         });
       }
     }
 
-    // Cleanup khi component unmount
     return () => {
       if (socketRef.current) {
         console.log('🔌 Disconnecting socket...');
@@ -261,13 +204,13 @@ export function useSocket(
         socketRef.current = null;
       }
     };
-  }, []); // Empty dependency array - only run once
+  }, []);
 
   return socketRef;
 }
 
 /**
- * Simple useSocket for chat only (backward compatibility)
+ * Dùng riêng cho chat (chỉ message)
  */
 export function useChatSocket(onMessage?: (data: IncomingMessage) => void) {
   return useSocket(onMessage);

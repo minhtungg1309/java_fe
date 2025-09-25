@@ -21,97 +21,61 @@ import { getToken } from "../../services/localStorageService";
  * Trang chính của tính năng chat
  * Quản lý danh sách cuộc trò chuyện, tin nhắn và giao diện chat
  */
+// **CLEAN: Extract user ID detection to separate function**
+const getUserId = (): string => {
+  try {
+    // Method 1: From JWT Token (preferred)
+    const token = getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.sub || payload.userId || payload.user_id;
+      if (userId && userId !== 'default-user-id') {
+        return userId;
+      }
+    }
+
+    // Method 2: From localStorage user object
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      const userId = user.id || user.userId || user.username;
+      if (userId && userId !== 'default-user-id') {
+        return userId;
+      }
+    }
+
+    // Method 3: Direct from localStorage
+    const directUserId = localStorage.getItem('userId') || localStorage.getItem('username');
+    if (directUserId && directUserId !== 'default-user-id') {
+      return directUserId;
+    }
+  } catch (error) {
+    console.error('Error detecting user ID:', error);
+  }
+  
+  return 'default-user-id';
+};
+
 export default function Chat() {
-  // State quản lý dữ liệu
+  // **CLEAN: Simplified state**
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
-  const [activeConversation, setActiveConversation] =
-    useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
-  const [, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showConversationList, setShowConversationList] = useState(true);
 
-  // **FIXED: Better User ID Detection**
-  const getCurrentUserId = (): string => {
-    console.log('🔍 Detecting user ID...');
-    
-    try {
-      // **Method 1: From JWT Token**
-      const token = getToken();
-      console.log('Token exists:', !!token);
-      
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          console.log('Token payload:', payload);
-          
-          const userId = payload.sub || payload.userId || payload.user_id || payload.username;
-          if (userId && userId !== 'default-user-id') {
-            console.log('✅ User ID from token:', userId);
-            return userId;
-          }
-        } catch (tokenError) {
-          console.error('Token parse error:', tokenError);
-        }
-      }
+  // **CLEAN: Memoized user ID**
+  const currentUserId = React.useMemo(() => {
+    const userId = getUserId();
+    console.log('Final Current User ID:', userId);
+    return userId;
+  }, []);
 
-      // **Method 2: From localStorage user object**
-      const userStr = localStorage.getItem('user');
-      console.log('User string exists:', !!userStr);
-      
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          console.log('User object:', user);
-          
-          const userId = user.id || user.userId || user.username;
-          if (userId && userId !== 'default-user-id') {
-            console.log('✅ User ID from user object:', userId);
-            return userId;
-          }
-        } catch (userError) {
-          console.error('User parse error:', userError);
-        }
-      }
-
-      // **Method 3: Direct from localStorage**
-      const directUserId = localStorage.getItem('userId') || localStorage.getItem('username');
-      console.log('Direct user ID:', directUserId);
-      
-      if (directUserId && directUserId !== 'default-user-id') {
-        console.log('✅ User ID from direct storage:', directUserId);
-        return directUserId;
-      }
-
-      // **Method 4: Check all localStorage keys for user info**
-      console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          const value = localStorage.getItem(key);
-          console.log(`localStorage[${key}]:`, value?.substring(0, 100));
-        }
-      }
-
-    } catch (error) {
-      console.error('Error detecting user ID:', error);
-    }
-    
-    console.error('❌ Could not get valid user ID, using default');
-    return 'default-user-id';
-  };
-
-  // **MEMO để tránh re-calculation**
-  const currentUserId = React.useMemo(() => getCurrentUserId(), []);
-  console.log('Final Current User ID:', currentUserId);
-
-  /**
-   * Xử lý tin nhắn đến từ socket
-   */
+  // **CLEAN: Socket connection**
   const handleIncomingMessage = useCallback(
     (payload: import("../../hooks/useSocket").IncomingMessage) => {
-      if (!activeConversation) return;
-      if (payload?.conversationId !== activeConversation.id) return;
+      if (!activeConversation || payload?.conversationId !== activeConversation.id) return;
 
       const newMsg: ChatMessageType = {
         id: payload.id,
@@ -125,7 +89,6 @@ export default function Chat() {
       };
 
       setMessages((prev) => [...prev, newMsg]);
-
       setConversations((prevConversations) =>
         prevConversations.map((conv) =>
           conv.id === payload.conversationId
@@ -141,10 +104,9 @@ export default function Chat() {
     [activeConversation]
   );
 
-  // Kết nối socket cho chat messages
   useSocket(handleIncomingMessage);
 
-  // Call management - **Only call if we have valid user ID**
+  // **CLEAN: Call management**
   const callHookEnabled = currentUserId !== 'default-user-id';
   const {
     incomingCall,
@@ -156,6 +118,27 @@ export default function Chat() {
     rejectCall,
     endCall,
   } = useCall(callHookEnabled ? currentUserId : '');
+
+  // **CLEAN: Handle call start**
+  const handleStartCall = useCallback(
+    (callType: 'audio' | 'video', participantName?: string) => {
+      if (!callHookEnabled) {
+        alert('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+        return;
+      }
+      if (!activeConversation) {
+        alert('Vui lòng chọn cuộc trò chuyện trước');
+        return;
+      }
+
+      const finalParticipantName = participantName || 
+                                   activeConversation.participantName || 
+                                   'Unknown User';
+
+      startCall(activeConversation.id, callType, finalParticipantName);
+    },
+    [activeConversation, startCall, callHookEnabled]
+  );
 
   /**
    * Tải danh sách cuộc trò chuyện khi component mount
@@ -235,55 +218,6 @@ export default function Chat() {
     setConversations(data);
   };
 
-  /**
-   * Handle call start with proper validation
-   */
-  const handleStartCall = useCallback(
-    (callType: 'audio' | 'video', participantName?: string) => {
-      // **Validate user session first**
-      if (!callHookEnabled) {
-        alert('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
-        console.error('❌ Cannot start call: Invalid user session');
-        return;
-      }
-
-      if (!activeConversation) {
-        alert('Vui lòng chọn cuộc trò chuyện trước');
-        return;
-      }
-
-      // Get target user ID from conversation participants
-      const targetUserId = activeConversation.participants?.find(
-        p => p.userId !== currentUserId
-      )?.userId || activeConversation.participantId;
-
-      if (!targetUserId) {
-        alert('Không thể xác định người nhận cuộc gọi');
-        return;
-      }
-
-      const finalParticipantName = participantName || 
-                                   activeConversation.participantName || 
-                                   'Unknown User';
-
-      console.log('🚀 Starting call with validated data:', {
-        currentUserId,
-        targetUserId,
-        callType,
-        participantName: finalParticipantName,
-        callHookEnabled
-      });
-
-      startCall(targetUserId, callType, finalParticipantName);
-    },
-    [activeConversation, currentUserId, startCall, callHookEnabled]
-  );
-
-  // **Show user session warning**
-  if (!callHookEnabled) {
-    console.warn('⚠️ Call functionality disabled due to invalid user session');
-  }
-
   // Hiển thị loading
   if (loading) {
     return (
@@ -297,12 +231,11 @@ export default function Chat() {
     <>
       <PageMeta title="Trò chuyện" description="Trang trò chuyện" />
       
-      {/* **User Session Debug Info** */}
+      {/* **CLEAN: Debug info only in development** */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-4 right-4 bg-black bg-opacity-80 text-white p-2 rounded text-xs z-50">
-          <div>User ID: {currentUserId}</div>
-          <div>Call Enabled: {callHookEnabled ? '✅' : '❌'}</div>
-          <div>Token: {getToken() ? '✅' : '❌'}</div>
+          <div>User: {currentUserId}</div>
+          <div>Call: {callHookEnabled ? '✅' : '❌'}</div>
         </div>
       )}
       
