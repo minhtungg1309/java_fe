@@ -2,6 +2,7 @@ import {jwtDecode} from "jwt-decode";
 
 interface JwtPayload {
   scope: string;
+  sub: string;
 }
 
 export function getRoleFromToken(token: string): string | null {
@@ -22,5 +23,15 @@ export function getPermissionsFromToken(token: string): string[] {
     return decoded.scope.split(" ");
   } catch {
     return [];
+  }
+}
+
+export function getUserIdFromToken(token: string): string | null {
+  try {
+    const decoded = jwtDecode<JwtPayload>(token);
+    return decoded.sub || null;
+  } catch (error) {
+    console.error('Error decoding token for userId:', error);
+    return null;
   }
 }

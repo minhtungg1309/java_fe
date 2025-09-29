@@ -77,7 +77,7 @@ const toChatMessage = (response: ChatMessageResponse) => ({
   content: response.message,
   senderId: response.me ? "current" : response.sender.userId,
   senderName: response.sender.username,
-  senderAvatar: response.sender.avatar, // Thêm nếu backend có avatar
+  senderAvatar: response.sender.avatar, 
   timestamp: response.createdDate,
   type: "text" as const,
   isRead: true,

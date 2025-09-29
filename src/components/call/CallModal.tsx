@@ -150,7 +150,7 @@ export const CallModal: React.FC<CallModalProps> = ({
               </span>
             </div>
             <h2 className="text-white text-xl font-semibold mb-2">
-              {participantName || 'Unknown'}
+              {participantName || 'người lạ'}
             </h2>
             <p className="text-gray-300 text-sm">
               {callState.isCallActive ? '🟢 Đang kết nối...' : '🟡 Đang gọi...'}
@@ -207,7 +207,7 @@ export const CallModal: React.FC<CallModalProps> = ({
         {/* Participant info */}
         <div className="absolute top-4 left-4">
           <h2 className="text-white text-xl font-semibold">
-            {participantName || 'Unknown'}
+            {participantName}
           </h2>
           <p className="text-gray-300 text-sm">
             {callState.callType === 'video' ? 'Video call' : 'Voice call'}

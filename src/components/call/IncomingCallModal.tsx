@@ -14,11 +14,11 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
   onReject,
 }) => {
   if (!callOffer) return null;
-
+console.log('IncomingCallModal received offer:', callOffer)
   const callerName = callOffer.callerInfo?.displayName || 
                     callOffer.callerInfo?.username || 
                     callOffer.callerId || 
-                    'Unknown User';
+                    'ai đó';
   
   const callerAvatar = callOffer.callerInfo?.avatar;
   const callerFirstName = callOffer.callerInfo?.firstName;
@@ -100,14 +100,6 @@ export const IncomingCallModal: React.FC<IncomingCallModalProps> = ({
             </svg>
             Trả lời
           </button>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-4 text-xs text-gray-500 border-t pt-3">
-          <div>ID cuộc gọi: {callOffer.callId?.substring(0, 8)}...</div>
-          {callOffer.callerInfo?.username && (
-            <div>Người gọi: {callOffer.callerInfo.username}</div>
-          )}
         </div>
 
         {/* Ringing Animation */}

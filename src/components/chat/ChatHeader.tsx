@@ -5,7 +5,6 @@ interface ChatHeaderProps {
   conversation: Conversation | null;
   onStartCall: (callType: 'audio' | 'video', participantName?: string) => void;
   onBackToConversations?: () => void;
-  currentUserId?: string;
 }
 
 /**
@@ -15,7 +14,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   conversation,
   onStartCall,
   onBackToConversations,
-  currentUserId,
 }) => {
   // Hiển thị placeholder khi chưa chọn cuộc trò chuyện
   if (!conversation) {
@@ -30,7 +28,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   const handleStartCall = (callType: 'audio' | 'video') => {
     // Get participant info from conversation
-    const participantName = conversation.participantName || 'Unknown User';
+    const participantName = conversation.participantName;
     onStartCall(callType, participantName);
   };
 
@@ -79,7 +77,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         {/* Thông tin tên */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900">
-            {conversation.participantName || 'Unknown User'}
+            {conversation.participantName}
           </h2>
           {conversation.participantRole && (
             <p className="text-sm text-gray-500">

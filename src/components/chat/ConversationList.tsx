@@ -18,7 +18,6 @@ interface ConversationListProps {
   conversations: Conversation[];
   activeConversationId?: string;
   onConversationSelect: (conversation: Conversation) => void;
-  onSearchChange: (searchTerm: string) => void;
   reloadConversations: () => Promise<void>; // thêm prop này
 }
 
@@ -26,7 +25,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   activeConversationId,
   onConversationSelect,
-  onSearchChange,
   reloadConversations, // nhận prop này
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -207,7 +205,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             onChange={(e) => {
               const value = e.target.value;
               setSearchTerm(value);
-              onSearchChange(value);
             }}
           />
           {searching && (
