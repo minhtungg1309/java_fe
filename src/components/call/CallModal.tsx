@@ -308,23 +308,6 @@ export const CallModal: React.FC<CallModalProps> = ({
             </svg>
           </button>
         </div>
-
-        {/* Device status */}
-        <div className="mt-4 text-center text-gray-400 text-sm">
-          Audio: {callState.deviceStatus.hasAudio ? '✅' : '❌'} | 
-          Video: {callState.deviceStatus.hasVideo ? '✅' : '❌'} | 
-          Permission: {callState.deviceStatus.permissionGranted ? '✅' : '❌'}
-          {callState.isNoDeviceMode && ' | 🔇 No Device Mode'}
-        </div>
-        
-        {/* Debug info for troubleshooting */}
-        <div className="mt-2 text-center text-gray-500 text-xs">
-          Local Stream: {callState.localStream ? '✅' : '❌'} | 
-          Remote Stream: {callState.remoteStream ? '✅' : '❌'} |
-          Call Type: {callState.callType} |
-          Local Tracks: {callState.localStream?.getTracks().length || 0} |
-          Remote Tracks: {callState.remoteStream?.getTracks().length || 0}
-        </div>
       </div>
     </div>
   );
