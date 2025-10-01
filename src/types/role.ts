@@ -1,4 +1,4 @@
-import { Permission } from './permission';
+import { Permission } from "./permission";
 
 /**
  * Kiểu dữ liệu cho role
@@ -17,4 +17,4 @@ export interface CreateRoleRequest {
   name: string;
   description: string;
   permissions: string[];
-} 
+}

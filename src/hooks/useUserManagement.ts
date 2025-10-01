@@ -37,10 +37,28 @@ export const useUserManagement = () => {
     }
   }, []);
 
-  const updateUserInList = useCallback(async (id: string, userData: Partial<UpdateUserRequest>) => {
+  const updateUserInList = useCallback(async (id: string, userData: Partial<UpdateUserRequest> & { roles?: string[] }) => {
     try {
       setLoading(true);
-      const updatedUser = await updateUser(id, userData);
+      
+      // Gửi đầy đủ tất cả các field
+      const requestData: Partial<UpdateUserRequest> = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        dob: userData.dob,
+        roles: userData.roles || [],
+        avatar: userData.avatar || '',
+        city: userData.city || '',
+        email: userData.email || '',
+        phone: userData.phone || ''
+      };
+      
+      // Chỉ thêm password nếu có
+      if (userData.password && userData.password.trim()) {
+        requestData.password = userData.password;
+      }
+      
+      const updatedUser = await updateUser(id, requestData);
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === id ? updatedUser : user

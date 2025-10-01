@@ -16,20 +16,22 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
+  roles: string[]; // Thêm roles vào NavItem
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+// Cấu hình menu có roles
 const navItems: NavItem[] = [
- 
   {
     icon: <UserCircleIcon />,
     name: "User Profile",
-    path: "/",
-    
+    path: "/user",
+    roles: ["ROLE_ADMIN"],
   },
   {
     icon: <PlugInIcon />,
     name: "Authorization",
+    roles: ["ROLE_ADMIN"], // chỉ admin thấy
     subItems: [
       { name: "Role", path: "/role", pro: false },
       { name: "Permission", path: "/permission", pro: false },
@@ -38,9 +40,16 @@ const navItems: NavItem[] = [
   {
     icon: <ChatIcon />,
     name: "Trò chuyện",
-    path: "/chat",
+    path: "/",
+    roles: ["ROLE_USER", "ROLE_ADMIN"],
   },
 ];
+
+// Lấy role từ localStorage
+const role = localStorage.getItem("role") ?? "ROLE_USER";
+
+// Lọc menu theo role
+const filteredNavItems = navItems.filter(item => item.roles.includes(role));
 
 const othersItems: NavItem[] = [
   
@@ -302,7 +311,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filteredNavItems, "main")}
             </div>
           </div>
         </nav>

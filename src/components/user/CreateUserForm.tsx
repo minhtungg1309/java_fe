@@ -9,6 +9,9 @@ interface CreateUserFormProps {
   onClose: () => void;
 }
 
+/**
+ * Form tạo mới người dùng với các trường thông tin cơ bản
+ */
 export const CreateUserForm: React.FC<CreateUserFormProps> = ({
   form,
   loading = false,
@@ -18,7 +21,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl mx-4 shadow-xl">
+      <div className="bg-white rounded-lg w-full max-w-4xl mx-4 shadow-xl">
         {/* Header modal */}
         <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
           <h2 className="text-xl font-semibold">Thêm Mới Người Dùng</h2>
@@ -78,6 +81,34 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
                   required
                 />
               </div>
+
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email || ''}
+                  onChange={onChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập email"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={form.phone || ''}
+                  onChange={onChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập số điện thoại"
+                />
+              </div>
             </div>
 
             {/* Cột phải */}
@@ -114,6 +145,37 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
+              </div>
+
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Thành phố
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={form.city || ''}
+                  onChange={onChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập thành phố"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Avatar (URL)
+                </label>
+                <input
+                  type="url"
+                  name="avatar"
+                  value={form.avatar || ''}
+                  onChange={onChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nhập đường link hình ảnh"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Nhập đường link hình ảnh có sẵn trên internet
+                </p>
               </div>
             </div>
           </div>

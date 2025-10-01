@@ -1,7 +1,11 @@
 import httpClient from "../configurations/httpClient";
 import { API } from "../configurations/configuration";
 import { Role, CreateRoleRequest } from "../types/role";
-import { handleApiResponse, createUrl, handleApiError } from "../utils/apiHelpers";
+import {
+  handleApiResponse,
+  createUrl,
+  handleApiError,
+} from "../utils/apiHelpers";
 
 /**
  * Service xử lý role operations
@@ -17,7 +21,7 @@ export class RoleService {
       const response = await httpClient.post(API.CREATE_ROLE, role);
       return handleApiResponse<Role>(response);
     } catch (error) {
-      throw handleApiError(error, 'Không thể tạo role');
+      throw handleApiError(error, "Không thể tạo role");
     }
   }
 
@@ -30,7 +34,7 @@ export class RoleService {
       const response = await httpClient.get(API.GET_ROLES);
       return handleApiResponse<Role[]>(response);
     } catch (error) {
-      throw handleApiError(error, 'Không thể lấy danh sách roles');
+      throw handleApiError(error, "Không thể lấy danh sách roles");
     }
   }
 
@@ -43,7 +47,7 @@ export class RoleService {
       const url = createUrl(API.DELETE_ROLE, { roleName });
       await httpClient.delete(url);
     } catch (error) {
-      throw handleApiError(error, 'Không thể xóa role');
+      throw handleApiError(error, "Không thể xóa role");
     }
   }
 }
@@ -51,4 +55,4 @@ export class RoleService {
 // Export các function để tương thích ngược
 export const createRole = RoleService.create;
 export const getRoles = RoleService.getAll;
-export const deleteRole = RoleService.delete; 
+export const deleteRole = RoleService.delete;

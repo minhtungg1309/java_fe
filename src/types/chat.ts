@@ -6,9 +6,9 @@ export interface ChatMessage {
   content: string;
   senderId: string;
   senderName: string;
-  senderAvatar?: string;
+  senderAvatar?: string | null;
   timestamp: string;
-  type: 'text' | 'image' | 'file';
+  type: "text" | "image" | "file";
   imageUrl?: string;
   isRead: boolean;
 }
@@ -23,7 +23,18 @@ export interface Conversation {
   participantAvatar?: string;
   participantRole?: string;
   lastMessage?: string;
+  lastMessageSender?: string;
   lastMessageTime?: string;
   unreadCount: number;
   isActive?: boolean;
 }
+
+/**
+ * Payload để tạo cuộc trò chuyện
+ */
+export type CreateConversationPayload = {
+  type: "DIRECT" | "GROUP";
+  participantIds: string[];
+  name?: string;
+  avatarGroup?: string;
+};

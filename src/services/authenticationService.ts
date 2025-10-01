@@ -14,7 +14,10 @@ export class AuthenticationService {
    * @param password - Mật khẩu
    * @returns Response từ API
    */
-  static async login(username: string, password: string): Promise<LoginResponse> {
+  static async login(
+    username: string,
+    password: string
+  ): Promise<LoginResponse> {
     try {
       const response = await httpClient.post<LoginResponse>(API.LOGIN, {
         username,
@@ -28,7 +31,7 @@ export class AuthenticationService {
 
       return response.data;
     } catch (error) {
-      throw handleApiError(error, 'Đăng nhập thất bại');
+      throw handleApiError(error, "Đăng nhập thất bại");
     }
   }
 

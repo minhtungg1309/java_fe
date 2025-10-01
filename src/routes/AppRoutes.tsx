@@ -7,20 +7,24 @@ import Permission from "../pages/Dashboard/Permission.tsx";
 import Role from "../pages/Dashboard/Role.tsx";
 import Chat from "../pages/Dashboard/Chat.tsx";
 import ProtectedRoute from "../components/common/ProtectedRoute";
+import UserProfiles from "../pages/UserProfiles.tsx";
 
 export default function AppRoutes(): React.ReactElement {
   return (
     <Routes>
       {/* Protected Dashboard Routes */}
-      <Route element={
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      }>
-        <Route index path="/" element={<Home />} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index path="/" element={<Chat />} />
         <Route path="/permission" element={<Permission />} />
         <Route path="/role" element={<Role />} />
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/user" element={<Home />} />
+        <Route path="/profile" element={<UserProfiles />} />
       </Route>
 
       {/* Public Auth Routes */}
