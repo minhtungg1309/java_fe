@@ -38,6 +38,16 @@ Chào mừng mọi đóng góp! Vui lòng tạo pull request hoặc issues để
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/06971a19-da73-4b96-839c-47e61314eb4b" />
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/42f27cf7-b71e-464b-b9f6-561ca8e6e835" />
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/f2a63959-42f8-485c-8a4f-82eadcc49155" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/ab3e1c50-9cb2-4c84-a573-014fceb9f519" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1e7ecc66-353a-4faf-a0a8-ae2b56d2eecc" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b5cfd34e-d3c2-45d4-b3d2-2eecd2f31973" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/608b733d-f5fa-4cc8-a776-75f0815a8e8c" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c7872a1b-e8e8-4adb-a37e-c855cceed466" />
+
+
+
+
+
 
 
 
